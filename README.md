@@ -20,6 +20,7 @@ n: disk size, b: buffer size, r: read retry
 Requires git, gcc, make
 ```
 git clone https://github.com/illumine/raw-cloner
+cd raw-cloner/src
 make
 make install
 ```
