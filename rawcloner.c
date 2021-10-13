@@ -13,7 +13,8 @@
 #include "logger.h"
 #include "user-options.h"
 #include "raw-io.h"
-
+#include "util.h"
+#include "stats.h"
 
 #define ONE_BYTE 1
 #define SOURCE 0
@@ -25,8 +26,7 @@
 
 UserOptions_t UserOptions;
 
- //FILE *  log_fp = NULL;
- //  int  log_stdout = 0;
+ProgramStats_t ProgramStats;
 
 void print_version(void) {
   printf("\nVersion %s  built on %s\n", VERSION, BUILD_DATE);
@@ -324,7 +324,7 @@ int  copy_backwards( void ){
     /* Read source and reposition after read*/
     lseek(fdi, -bytes_to_read, SEEK_CUR);
     for(i=0; i< bytes_to_read; i++){
-       nr = read( fdi,&c,1);
+       nr = read( fdi,&c,ONE_BYTE);
        if( nr > 0 )
           buffer[i] = c;
     }
@@ -534,6 +534,11 @@ int main(int argc, char * argv[]) {
   log_set_stdout();
   log_set_loglevel(DEBUG);
   user_options_log( &UserOptions);
+  
+  
+  program_stats_init( &ProgramStats);
+  
+  
 
   if(UserOptions.direction == FORWARD){
     if (UserOptions.image_chunk_size == NO_IMAGE)
@@ -543,6 +548,8 @@ int main(int argc, char * argv[]) {
   }else if(UserOptions.direction == BACKWARD){
   	status = copy_backwards();
   }
+  
+  program_stats_log( &ProgramStats);
   
   program_exit(status);
 }
