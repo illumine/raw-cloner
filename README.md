@@ -17,8 +17,9 @@ Best Case: Omega(n) = n/b
 n: disk size, b: buffer size, r: read retry
   
 ## Compilation
-Requires gcc, make
+Requires git, gcc, make
 ```
+git clone https://github.com/illumine/raw-cloner
 make
 make install
 ```
