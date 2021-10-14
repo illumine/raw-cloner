@@ -1,23 +1,13 @@
 #include <stdio.h>
-
 #include <stdlib.h>
-
 #include <string.h>
-
 #include <ctype.h>
-
 #include <sys/types.h>
-
 #include <sys/stat.h>
-
 #include <fcntl.h>
-
 #include <time.h>
-
 #include <pthread.h>
-
 #include <unistd.h>
-
 #include <errno.h>
 
 /* required to support 64 raw I/O. See unistd.h */
@@ -25,9 +15,7 @@
 
 #define FORWARD 'F'
 #define BACKWARD 'B'
-
 #define NO_IMAGE 0
-
 #define ONE_BYTE 1
 #define EX_ERROR 1
 #define EX_OK 0
@@ -52,10 +40,11 @@ UserOptions_t;
 UserOptions_t UserOptions;
 
 void print_version(void) {
-  printf("\nVersion %s  built on %s\n", VERSION, BUILD_DATE);
+  printf("\nVery old Version %s  built on %s\n", VERSION, BUILD_DATE);
 }
 
 void usage(char * progname) {
+  printf("\nThis is a very old version. Used only for developer reference. Do not use it!");	
   printf("\n%s -i <input path> -o <output path> -l <log path> -b <buffer size> -r <read retries> -s <start offset> -e <end offset> -I <image size> -wv", progname);
   printf("\n-v version info");
   printf("\n-w read the disk/file backwards - from end to start.");

@@ -57,13 +57,13 @@ void usage(char * progname) {
 void mark_bad_byte(int fdi) {
   char msg[BUFSIZ] = {'\0'};	
   off_t offset = lseek(fdi, 0, SEEK_CUR);
-  sprintf(msg,"BB%ld,", offset);
+  sprintf(msg,"BB->%ld,", offset);
   log_message( INFO, msg);
 }
 
 #ifdef __ultra_fast__
 size_t read_disk(int fdi, void * buffer, size_t buf_size, char * msg) {
-	return read(fdi, buffer, buf_size);
+  return read(fdi, buffer, buf_size);
 }
 #endif
 
@@ -88,14 +88,14 @@ size_t read_disk(int fdi, void * buffer, size_t buf_size, char * msg) {
     
   } else {
     FD_ZERO( & rfds);
-    FD_SET(0, & rfds);
+    FD_SET(fdi, & rfds);
     tv.tv_sec = UserOptions.read_timeout_sec;
     tv.tv_usec = 0;
 
     /* Poll descriptor for input buffer*/
     retval = select(1, & rfds, NULL, NULL, & tv);
     if (retval == -1) {
-      sprintf(msg, "select() returned error on input file descriptor.");
+      sprintf(msg, "select() returned error on input file descriptor %d.",fdi);
       perror(msg);
       log_message( ERROR ,msg );
       bytes_read = -1;
@@ -242,7 +242,7 @@ int  copy_forward(void) {
       ProgramStats.bytes_read += bytes_read;
       ProgramStats.bytes_written += bytes_writen;
       ProgramStats.buffers_read++;
-      ProgramStats.buffers_written++ ;
+      ProgramStats.buffers_written++;
     }
 
   }
@@ -252,8 +252,8 @@ int  copy_forward(void) {
 /* post processing steps */
 EXIT:
   if( status == EX_ERROR){
-    log_message( ERROR ,msg );
-    perror(msg);  	
+  	perror(msg);
+    log_message( ERROR ,msg );  	
   }
   
   if(buffer)
@@ -378,8 +378,8 @@ int  copy_backwards( void ){
 /* post processing steps */
 EXIT:
   if( status == EX_ERROR){
-    log_message( ERROR ,msg );
-    perror(msg);  	
+  	perror(msg);
+    log_message( ERROR ,msg );  	
   }
   
   if(buffer)
@@ -517,6 +517,8 @@ int  copy_to_image( void ) {
 
   }
 
+  status = EX_OK;
+
 /* post processing steps */
 EXIT:
   if( status == EX_ERROR){
@@ -550,7 +552,10 @@ int main(int argc, char * argv[]) {
     usage(argv[0]);
     exit(EX_ERROR);
   }
+#ifdef DEBUG  
   user_options_debug( & UserOptions);
+#endif
+  
   if (user_options_check( & UserOptions, msg)) {
     fprintf(stderr, "%s", msg);
     exit(EX_ERROR);
@@ -568,14 +573,11 @@ int main(int argc, char * argv[]) {
       exit(EX_ERROR);	
   }
   log_set_stdout();
-  log_set_loglevel(DEBUG);
+  log_set_loglevel( UserOptions.log_level );
   user_options_log( &UserOptions);
-  
   
   program_stats_init( &ProgramStats);
   
-  
-
   if(UserOptions.direction == FORWARD){
     if (UserOptions.image_chunk_size == NO_IMAGE)
       status = copy_forward();
