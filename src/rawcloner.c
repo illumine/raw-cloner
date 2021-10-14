@@ -21,8 +21,8 @@
 #define DESTINATION 1
 #define EX_ERROR 1
 #define EX_OK 0
-#define VERSION "v1.0"
-#define BUILD_DATE "13/10/2021"
+#define VERSION "v1.1"
+#define BUILD_DATE "14/10/2021"
 
 UserOptions_t UserOptions;
 
