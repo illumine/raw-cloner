@@ -46,7 +46,8 @@ void usage(char * progname) {
   printf("\n-I <image chunk size> Image Chunk Size in bytes. For best performance this must be a multiplier of Buffer size.");     
   printf("\n-t <read timeout secs> if read is blocked, how meny seconds to wait before we timeout the read attempt.");  
   printf("\n-B read the disk/file backwards - from end to start BYTE BY BYTE - slow but reliable.");
-  printf("\n-k <log level> Set the log level. Values 0:DEBUG,1:TRACE,2:INFO,3:ERROR,4:FATAL,5:NOTHING .");
+  printf("\n-k <log level> Set the log level. Values 0:DEBUG,1:TRACE,2:INFO,3:ERROR,4:FATAL,5:NOTHING.");
+  printf("\n-m <minutes> Log program stats/progress every <minutes>, if <minutes> is -1, then don't log any stats.");
   printf("\n-u Set the log to be sent to stdout.");
   printf("\nReturns 0 on OK , 1 on Error.");
   printf("\nAuthor: Michael Mountrakis 2021 - mike.mountrakis@gmail.com");  
@@ -54,10 +55,11 @@ void usage(char * progname) {
   printf("\n");
 }
 
+
 void mark_bad_byte(int fdi) {
   char msg[BUFSIZ] = {'\0'};	
   off_t offset = lseek(fdi, 0, SEEK_CUR);
-  sprintf(msg,"BB->%ld,", offset);
+  sprintf(msg,"BB->%07ld | %lX", offset,offset);
   log_message( INFO, msg);
 }
 
@@ -141,10 +143,18 @@ size_t read_disk(int fdi, void * buffer, size_t buf_size, char * msg) {
   }
   return bytes_read;
 }
-
-
 #endif
 
+
+void periodic_program_stats_log( void ){
+  time_t now = time(NULL);
+  if( ( UserOptions.stats_every_minutes > 0  ) && 
+      ( now - ProgramStats.time_stop > UserOptions.stats_every_minutes * 60 ) 
+	){
+	ProgramStats.time_stop = now;
+    program_stats_log( &ProgramStats);
+  }
+}
 
 void program_exit( int exit_status ){
   char msg[BUFSIZ] = {'\0'};	
@@ -244,6 +254,9 @@ int  copy_forward(void) {
       ProgramStats.buffers_read++;
       ProgramStats.buffers_written++;
     }
+    
+    
+    periodic_program_stats_log();
 
   }
   
@@ -371,6 +384,7 @@ int  copy_backwards( void ){
     memset (buffer, '\0', bytes_to_read);
     curr_offset+=bytes_to_read;
 
+    periodic_program_stats_log();
   } 
 
   status = EX_OK;
@@ -505,6 +519,7 @@ int  copy_to_image( void ) {
         log_message( DEBUG, msg);
       }
 
+      periodic_program_stats_log();
     } //image loop
 
     safe_close(fdo);
@@ -522,8 +537,8 @@ int  copy_to_image( void ) {
 /* post processing steps */
 EXIT:
   if( status == EX_ERROR){
-    log_message( ERROR ,msg );
-    perror(msg);  	
+  	perror(msg); 
+    log_message( ERROR ,msg ); 	
   }
   
   if(buffer)
@@ -552,9 +567,6 @@ int main(int argc, char * argv[]) {
     usage(argv[0]);
     exit(EX_ERROR);
   }
-#ifdef DEBUG  
-  user_options_debug( & UserOptions);
-#endif
   
   if (user_options_check( & UserOptions, msg)) {
     fprintf(stderr, "%s", msg);
@@ -586,6 +598,9 @@ int main(int argc, char * argv[]) {
   }else if(UserOptions.direction == BACKWARD){
   	status = copy_backwards();
   }
+  
+  ProgramStats.clock_stop =  clock();
+  ProgramStats.time_stop  =  time(NULL);
   
   program_stats_log( &ProgramStats);
   

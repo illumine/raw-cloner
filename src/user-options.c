@@ -13,7 +13,7 @@ int user_options_parse_from_cli_arguments(UserOptions_t * user_options, int argc
   if (argc == 1) 
     return 1;
 
-  while ((opt = getopt(argc, argv, "i:o:l:b:r:s:e:I:t:k:Bvu")) != -1) {
+  while ((opt = getopt(argc, argv, "i:o:l:b:r:s:e:I:t:k:m:Bvun")) != -1) {
     switch (opt) {
     case 'i':
       user_options -> in_path = strdup(optarg);
@@ -44,7 +44,10 @@ int user_options_parse_from_cli_arguments(UserOptions_t * user_options, int argc
       break;      
     case 'k':
       user_options->log_level = atoi(optarg);
-      break;       
+      break;
+    case 'm':
+      user_options->stats_every_minutes = atoi(optarg);
+      break;   
       /* switches */
     case 'B':
       user_options -> direction = BACKWARD;
@@ -52,9 +55,12 @@ int user_options_parse_from_cli_arguments(UserOptions_t * user_options, int argc
     case 'v':
       user_options -> print_version_only = 1;
       return 0;
+    case 'n':
+      user_options -> stats_every_minutes = DONT_LOG_STATS;
+      return 0;      
     case 'u':
       user_options -> log_stdout = 0;
-      return 0;      
+      return 0;	        
     default:
       /* Unknown option: return error  */
       return 1;
@@ -82,6 +88,7 @@ void user_options_init(UserOptions_t * user_options) {
   user_options -> read_timeout_sec = WAIT_FOREVER;
   user_options -> log_level = 0;    /* set default log level to DEBUG */
   user_options -> log_stdout = 1;   /* Log also to std out */
+  user_options -> stats_every_minutes = 5;
 }
 
 void user_options_debug(UserOptions_t * user_options) {
@@ -97,10 +104,11 @@ void user_options_debug(UserOptions_t * user_options) {
   printf("\nStart Offset: %ld", user_options -> start_offset);
   printf("\nEnd Offset: %ld", user_options -> end_offset);
   printf("\nImage Chunk Size: %ld", user_options -> image_chunk_size);
-  printf("\nRead Direction %c", user_options -> direction);
-  printf("\nRead timeout %d", user_options -> read_timeout_sec);
-  printf("\nLog Level %d", user_options -> log_level);
-  printf("\nLog also to stdout %d", user_options -> log_stdout);
+  printf("\nRead Direction: %c", user_options -> direction);
+  printf("\nRead timeout: %d", user_options -> read_timeout_sec);
+  printf("\nLog Level: %d", user_options -> log_level);
+  printf("\nLog also to stdout: %d", user_options -> log_stdout);
+  printf("\nLog stats every X minutes: %d", user_options -> stats_every_minutes);
   printf("\n");
 
   return;
@@ -143,13 +151,15 @@ void user_options_log( const UserOptions_t * user_options ){
       log_message( INFO, msg );
       sprintf(msg,"Image Chunk Size: %ld", user_options -> image_chunk_size);
       log_message( INFO, msg );
-      sprintf(msg,"Read Direction %c", user_options -> direction);
+      sprintf(msg,"Read Direction: %c", user_options -> direction);
       log_message( INFO, msg );
-      sprintf(msg,"Read timeout %d", user_options -> read_timeout_sec);
+      sprintf(msg,"Read timeout: %d", user_options -> read_timeout_sec);
       log_message( INFO, msg );
-      sprintf(msg,"Log Level %d", user_options -> log_level);
+      sprintf(msg,"Log Level: %d", user_options -> log_level);
       log_message( INFO, msg );      
-      sprintf(msg,"Log also to stdout %d", user_options -> log_stdout);    
+      sprintf(msg,"Log also to stdout: %d", user_options -> log_stdout);    
       log_message( INFO, msg );	    
+      sprintf(msg,"Log stats every X minutes: %d", user_options -> stats_every_minutes); 
+      log_message( INFO, msg );	       
       log_message( INFO, "User Options finished." );
 }

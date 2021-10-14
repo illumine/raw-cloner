@@ -5,6 +5,7 @@
 #define BACKWARD 'B'
 #define NO_IMAGE 0
 #define WAIT_FOREVER -1
+#define DONT_LOG_STATS -1
 
 typedef struct UserOptions_t {
   int print_version_only;
@@ -20,6 +21,7 @@ typedef struct UserOptions_t {
   int    log_level;
   int    log_stdout;
   char direction;
+  int    stats_every_minutes;
 }
 UserOptions_t;
 

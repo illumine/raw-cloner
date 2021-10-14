@@ -100,3 +100,4 @@ void program_stats_log(ProgramStats_t * program_stats) {
   log_message( INFO, msg );   
   return;
 }
+
