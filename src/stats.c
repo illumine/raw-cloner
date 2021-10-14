@@ -62,9 +62,8 @@ void program_stats_log(ProgramStats_t * program_stats) {
     return;
   }
   
-  char timestamp_str[26]= {'\0'};
-  struct tm * tm_info;
-  char msg[BUFSIZ] = {'\0'};    
+  char timestamp_str[26]= {'\0'}, msg[BUFSIZ] = {'\0'};
+  struct tm * tm_info;  
   
   sprintf(msg,"Bytes Read             : %ld",program_stats -> bytes_read);
   log_message( INFO, msg );

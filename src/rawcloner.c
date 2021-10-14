@@ -78,11 +78,14 @@ size_t read_disk(int fdi, void * buffer, size_t buf_size, char * msg) {
     /* this will block forever if no data, or return with data or error*/
     for (read_retries = 0; read_retries < UserOptions.read_retries; read_retries++) {
       bytes_read = safe_read(fdi, buffer, buf_size);
-      if (bytes_read < 0)
-        continue;
+      if (bytes_read < 0){
+      	ProgramStats.read_retries++;
+      	continue;
+	  }
       else
-        break;
+        break; 
     }
+    
   } else {
     FD_ZERO( & rfds);
     FD_SET(0, & rfds);
@@ -92,19 +95,25 @@ size_t read_disk(int fdi, void * buffer, size_t buf_size, char * msg) {
     /* Poll descriptor for input buffer*/
     retval = select(1, & rfds, NULL, NULL, & tv);
     if (retval == -1) {
-      sprintf(msg, "\nselect() returned error on input file descriptor.");
+      sprintf(msg, "select() returned error on input file descriptor.");
+      perror(msg);
+      log_message( ERROR ,msg );
       bytes_read = -1;
     } else if (retval) {
       /*Data is available now. Read it with safe_read */
       for (read_retries = 0; read_retries < UserOptions.read_retries; read_retries++) {
         bytes_read = safe_read(fdi, buffer, buf_size);
-        if (bytes_read < 0)
-          continue;
+        if (bytes_read < 0){
+          ProgramStats.read_retries++;
+		  continue;        	
+		}
         else
           break;
       }
     } else
       /* No data within timeout */
+      ProgramStats.timeout_seconds += UserOptions.read_timeout_sec;
+      ProgramStats.timeouts++;
       bytes_read = -1;
   }
 
@@ -122,8 +131,11 @@ size_t read_disk(int fdi, void * buffer, size_t buf_size, char * msg) {
       bytes_read = safe_read(fdi, buffer, buf_size);
       if (bytes_read < 0) {
         sleep(UserOptions.read_timeout_sec);
+        ProgramStats.read_retries++;
+        ProgramStats.timeout_seconds += UserOptions.read_timeout_sec;
+        ProgramStats.timeouts++;        
         continue;
-      } else
+      }else
         break;
     }
   }
@@ -141,7 +153,9 @@ void program_exit( int exit_status ){
   log_close();
   exit(exit_status);	
 }
-/* Return 0 on success */
+
+
+/* Returns 0 on success */
 int  copy_forward(void) {
 
   int fdi = -1, fdo = -1; 
@@ -201,17 +215,19 @@ int  copy_forward(void) {
       buf_size = UserOptions.end_offset - curr_offset;
 
     READ:
-      /* try to read the buffer */
-      bytes_read = read_disk(fdi, buffer, buf_size, msg);
+    /* try to read the buffer */
+    bytes_read = read_disk(fdi, buffer, buf_size, msg);
 
     if (bytes_read < 0) {
       buf_size = (size_t)(1 + buf_size / 2);
-
+      ProgramStats.buffers_resized++;
+      
       if (buf_size == 1) {
-        mark_bad_byte(fdi);
-        lseek(fdi, ONE_BYTE, SEEK_CUR);
-        buf_size = UserOptions.buf_size;
-        goto READ;
+         mark_bad_byte(fdi);
+         ProgramStats.bytes_bad++;
+         lseek(fdi, ONE_BYTE, SEEK_CUR);
+         buf_size = UserOptions.buf_size;
+         goto READ;      
       }
     } else if (bytes_read == 0)
       /* EOF */
@@ -220,9 +236,13 @@ int  copy_forward(void) {
       bytes_writen = full_write(fdo, buffer, bytes_read);
       if (bytes_writen < 0) {
         sprintf(msg, "Failed write %ld to %s.", bytes_read, UserOptions.out_path);
-        perror(msg);
-		log_message( ERROR ,msg );
+        goto EXIT;
       }
+      
+      ProgramStats.bytes_read += bytes_read;
+      ProgramStats.bytes_written += bytes_writen;
+      ProgramStats.buffers_read++;
+      ProgramStats.buffers_written++ ;
     }
 
   }
@@ -325,14 +345,26 @@ int  copy_backwards( void ){
     lseek(fdi, -bytes_to_read, SEEK_CUR);
     for(i=0; i< bytes_to_read; i++){
        nr = read( fdi,&c,ONE_BYTE);
-       if( nr > 0 )
+       if( nr > 0 ){
           buffer[i] = c;
+          ProgramStats.bytes_read++;
+	   }else if( nr > 0 ){
+	   	  ProgramStats.bytes_bad++;
+	   	  mark_bad_byte( fdi);
+	   }else
+	      continue;
     }
     lseek(fdi, -bytes_to_read, SEEK_CUR);
 
     /* Write Destination and reposition after write */
     lseek(fdo, -bytes_to_read, SEEK_CUR);
     nw = write(fdo, buffer, bytes_to_read);
+    if( nw < 0){
+        sprintf(msg, "Failed write %ld to %s.", bytes_to_read, UserOptions.out_path);
+        goto EXIT;    	
+	}else{
+		ProgramStats.bytes_written += bytes_to_read;
+	}
     lseek(fdo, -bytes_to_read, SEEK_CUR);
     
     /* Re-initialize buffer and increment offset */
@@ -371,7 +403,6 @@ int  copy_to_image( void ) {
   char msg[BUFSIZ]= {'\0'};
   size_t bytes_read = 0, buf_size = 0, bytes_writen = 0, curr_offset = 0;
   char * buffer = NULL;
-  int read_retries = 0;
 
   size_t current_image_chunk_size = 0;
   int current_image_chunk_n = 1;
@@ -419,7 +450,6 @@ int  copy_to_image( void ) {
   current_image_chunk_n = 1;
   current_image_chunk_name[0] = '\0';
   while (1) {
-    read_retries = 0;
     buf_size = UserOptions.buf_size;
     bytes_read = 0;
 
@@ -439,20 +469,22 @@ int  copy_to_image( void ) {
         curr_offset = lseek(fdi, 0, SEEK_CUR);
       if (UserOptions.end_offset < curr_offset + buf_size)
         buf_size = UserOptions.end_offset - curr_offset;
+        ProgramStats.buffers_resized++;
+      
 
       READ:
         /* try to read the buffer */
       bytes_read = read_disk(fdi, buffer, buf_size, msg);
-
       if (bytes_read < 0) {
         buf_size = (size_t)(1 + buf_size / 2);
-
-        if (buf_size == 1) {
+        ProgramStats.buffers_resized++;
+        
+        if (buf_size == 1) {        	
           mark_bad_byte(fdi);
+          ProgramStats.bytes_bad++;
           lseek(fdi, ONE_BYTE, SEEK_CUR);
-          read_retries = 0;
           buf_size = UserOptions.buf_size;
-          goto READ;
+          goto READ;         
         }
       } else if (bytes_read == 0)
         /* EOF */
@@ -461,9 +493,13 @@ int  copy_to_image( void ) {
         bytes_writen = full_write(fdo, buffer, bytes_read);
         if (bytes_writen < 0) {
           sprintf(msg, "Failed write %ld to %s.", bytes_read, current_image_chunk_name);
-          perror(msg);
-          log_message( ERROR, msg);
+          goto EXIT;
         }
+        ProgramStats.bytes_read += bytes_read;
+        ProgramStats.bytes_written += bytes_writen;
+        ProgramStats.buffers_read++;
+        ProgramStats.buffers_written++ ;        
+        
         current_image_chunk_size += bytes_writen;
         sprintf(msg, "current_image_chunk_size %07ld bytes_writen %07ld UserOptions.image_chunk_size %07ld", current_image_chunk_size, bytes_writen, UserOptions.image_chunk_size);
         log_message( DEBUG, msg);
