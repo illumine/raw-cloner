@@ -22,6 +22,7 @@ typedef struct UserOptions_t {
   int    log_stdout;
   char direction;
   int    stats_every_minutes;
+  int    sleep_millis;
 }
 UserOptions_t;
 

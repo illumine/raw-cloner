@@ -2,5 +2,6 @@
 # define UTIL_H
 
 size_t get_file_size(const char * path);
+int    msleep(long msec);
 
 #endif

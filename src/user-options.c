@@ -13,7 +13,7 @@ int user_options_parse_from_cli_arguments(UserOptions_t * user_options, int argc
   if (argc == 1) 
     return 1;
 
-  while ((opt = getopt(argc, argv, "i:o:l:b:r:s:e:I:t:k:m:Bvun")) != -1) {
+  while ((opt = getopt(argc, argv, "i:o:l:b:r:s:e:I:t:k:m:h:Bvun")) != -1) {
     switch (opt) {
     case 'i':
       user_options -> in_path = strdup(optarg);
@@ -48,6 +48,9 @@ int user_options_parse_from_cli_arguments(UserOptions_t * user_options, int argc
     case 'm':
       user_options->stats_every_minutes = atoi(optarg);
       break;   
+    case 'h':
+      user_options-> sleep_millis = atoi(optarg);
+      break;       
       /* switches */
     case 'B':
       user_options -> direction = BACKWARD;
@@ -89,6 +92,7 @@ void user_options_init(UserOptions_t * user_options) {
   user_options -> log_level = 0;    /* set default log level to DEBUG */
   user_options -> log_stdout = 1;   /* Log also to std out */
   user_options -> stats_every_minutes = 5;
+  user_options -> sleep_millis = 0;
 }
 
 void user_options_debug(UserOptions_t * user_options) {
@@ -109,6 +113,7 @@ void user_options_debug(UserOptions_t * user_options) {
   printf("\nLog Level: %d", user_options -> log_level);
   printf("\nLog also to stdout: %d", user_options -> log_stdout);
   printf("\nLog stats every X minutes: %d", user_options -> stats_every_minutes);
+  printf("\nSleep Milliseconds: %d", user_options -> sleep_millis );
   printf("\n");
 
   return;
@@ -160,6 +165,8 @@ void user_options_log( const UserOptions_t * user_options ){
       sprintf(msg,"Log also to stdout: %d", user_options -> log_stdout);    
       log_message( INFO, msg );	    
       sprintf(msg,"Log stats every X minutes: %d", user_options -> stats_every_minutes); 
+      log_message( INFO, msg );	       
+      sprintf(msg,"Sleep milliseconds: %d", user_options -> sleep_millis); 
       log_message( INFO, msg );	       
       log_message( INFO, "User Options finished." );
 }

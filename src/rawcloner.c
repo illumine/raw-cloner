@@ -47,7 +47,8 @@ void usage(char * progname) {
   printf("\n-t <read timeout secs> if read is blocked, how meny seconds to wait before we timeout the read attempt.");  
   printf("\n-B read the disk/file backwards - from end to start BYTE BY BYTE - slow but reliable.");
   printf("\n-k <log level> Set the log level. Values 0:DEBUG,1:TRACE,2:INFO,3:ERROR,4:FATAL,5:NOTHING.");
-  printf("\n-m <minutes> Log program stats/progress every <minutes>, if <minutes> is -1, then don't log any stats.");
+  printf("\n-m <minutes> Log program stats/progress every <minutes>, if <minutes> is -1, then don't log any stats. Default is 5 mins");
+  printf("\n-h <milliseconds> sleep some millis after r/w buffer to prevent overheat. Use this for notebooks. Default is 0 ");  
   printf("\n-u Set the log to be sent to stdout.");
   printf("\nReturns 0 on OK , 1 on Error.");
   printf("\nAuthor: Michael Mountrakis 2021 - mike.mountrakis@gmail.com");  
@@ -156,6 +157,22 @@ void periodic_program_stats_log( void ){
   }
 }
 
+/* Give a sleep for some millis to avoid overheat */
+void sleep_to_prevent_overheat( void ){
+  if( ( UserOptions.sleep_millis > 1  ) &&  
+      ( UserOptions.direction == FORWARD ) && 
+	  ( ProgramStats.buffers_read % 10 == 0 )
+  ){
+     msleep( UserOptions.sleep_millis );
+  }else if ( ( UserOptions.sleep_millis > 1  ) &&  
+      ( UserOptions.direction == BACKWARD ) && 
+	  ( ProgramStats.bytes_read % 1024 == 0 )
+  ){
+     msleep( UserOptions.sleep_millis );
+  }
+}
+
+
 void program_exit( int exit_status ){
   char msg[BUFSIZ] = {'\0'};	
   sprintf(msg, "Program exits with status %d.", exit_status );
@@ -257,7 +274,7 @@ int  copy_forward(void) {
     
     
     periodic_program_stats_log();
-
+    sleep_to_prevent_overheat();
   }
   
   status = EX_OK;
@@ -385,6 +402,7 @@ int  copy_backwards( void ){
     curr_offset+=bytes_to_read;
 
     periodic_program_stats_log();
+    sleep_to_prevent_overheat();
   } 
 
   status = EX_OK;
@@ -520,6 +538,7 @@ int  copy_to_image( void ) {
       }
 
       periodic_program_stats_log();
+      sleep_to_prevent_overheat();
     } //image loop
 
     safe_close(fdo);
