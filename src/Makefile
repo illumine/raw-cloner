@@ -2,12 +2,11 @@
 # Makefile created by Michael Mountrakis
 
 CC       = gcc
-WINDRES  = windres.exe
-OBJ      = rawcloner.o  user-options.o raw-io.o logger.o
-LINKOBJ  = rawcloner.o  user-options.o raw-io.o logger.o
+OBJ      = rawcloner.o  user-options.o raw-io.o logger.o util.o stats.o
+LINKOBJ  = rawcloner.o  user-options.o raw-io.o logger.o util.o stats.o
 LIBS     =
 INCS     =
-CXXINCS  =
+CXXINCS  = -g
 BIN      = raw-cloner
 CXXFLAGS = $(CXXINCS)
 CFLAGS   = $(INCS)
@@ -23,6 +22,11 @@ clean: clean-custom
 $(BIN): $(OBJ)
 	$(CC) $(LINKOBJ) -o $(BIN) $(LIBS)
 
+util.o: util.c
+	$(CC) -c util.c -o util.o $(CFLAGS)
+
+stats.o: stats.c
+	$(CC) -c stats.c -o stats.o $(CFLAGS)
 
 raw-io.o: raw-io.c
 	$(CC) -c raw-io.c -o raw-io.o $(CFLAGS)
@@ -36,7 +40,7 @@ user-options.o: user-options.c logger.o
 rawcloner.o: rawcloner.c
 	$(CC) -c rawcloner.c -o rawcloner.o $(CFLAGS)
 
-rawcloner: rawcloner.o user-options.o logger.o
+rawcloner: rawcloner.o user-options.o logger.o stats.o util.o
 	$(CC) -o rawcloner rawcloner.o user-options.o
 
 install: all
