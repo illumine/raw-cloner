@@ -62,3 +62,18 @@ READ:
 - Average  Theta(n)   = bnr
 
 Where: n - problem size,  b<<n  buffer size, r retries 
+
+## Arithmetics of terget platform
+```
+root@dynatrace-dev:~/raw-cloner# cat test.c
+#include<stdio.h>
+#include<stdlib.h>
+
+int main(){
+  return printf("\n long long %ld, off_t %ld, size_t %ld\n", sizeof(long long), sizeof(off_t), sizeof(size_t));
+}
+root@dynatrace-dev:~/raw-cloner# ./a.out
+
+ long long 8, off_t 8, size_t 8
+root@dynatrace-dev:~/raw-cloner#
+```
