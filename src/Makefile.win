@@ -16,7 +16,7 @@ RM       = rm.exe -f
 
 .PHONY: all all-before all-after clean clean-custom
 
-all: all-before $(BIN) all-after
+all: all-before $(BIN) all-after copydisk
 
 clean: clean-custom
 	${RM} $(OBJ) $(BIN)
@@ -44,3 +44,6 @@ rawcloner.o: rawcloner.c
 	
 rawcloner: rawcloner.o user-options.o logger.o util.o stats.o
 	$(CC) -o rawcloner rawcloner.o user-options.o
+	
+copydisk: copydisk.c
+	$(CC) copydisk.c -o copydisk $(CFLAGS)
