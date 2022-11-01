@@ -7,7 +7,7 @@ LINKOBJ  = rawcloner.o  user-options.o raw-io.o logger.o util.o stats.o
 LIBS     =
 INCS     =
 CXXINCS  = -g
-BIN      = raw-cloner readtest
+BIN      = raw-cloner
 CXXFLAGS = $(CXXINCS)
 CFLAGS   = $(INCS)
 RM       = rm -f
@@ -30,7 +30,7 @@ stats.o: stats.c
 
 raw-io.o: raw-io.c
 	$(CC) -c raw-io.c -o raw-io.o $(CFLAGS)
-        
+
 logger.o: logger.c
 	$(CC) -c logger.c -o logger.o $(CFLAGS)
 
@@ -47,5 +47,4 @@ copydisk: copydisk.c
 	$(CC) copydisk.c -o copydisk $(CFLAGS)
 
 install: all
-	mv rawcloner /bin/rawcloner
-
+	mv raw-cloner /bin/raw-cloner

@@ -13,9 +13,11 @@ Simple Copy of Static Buffer Size
 #define EX_ERROR 1
 
 
-int cp(const char *to, const char *from){
+
+int cp( const char *from,  const char *to ){
+  printf("cp 1\n");
   int fd_to, fd_from;
-  char buf[BUFSIZ * BUFSIZ ] = {'\0'};
+  char buf[BUFSIZ ] = {'\0'};
   ssize_t nread;
   int saved_errno;
 
@@ -23,16 +25,16 @@ int cp(const char *to, const char *from){
 
     fd_from = open(from, O_RDONLY);
     if (fd_from < 0){
-    	printf("Error opening %s file to read.\n", from);
-    	return -1;
-	}
-        
-    fd_to = open(to, O_WRONLY | O_CREAT | O_EXCL, 0666);
-    if (fd_to < 0){
-    	printf("Error opening %s file to write.\n", to);
+        printf("Error opening %s file to read.\n", from);
         goto out_error;
-	}
-	
+        }
+
+    fd_to = open(to, O_WRONLY | O_CREAT);
+    if (fd_to < 0){
+        printf("Error opening %s file to write.\n", to);
+        goto out_error;
+        }
+
     while (nread = read(fd_from, buf, sizeof buf), nread > 0){
         char *out_ptr = buf;
         ssize_t nwritten;
@@ -63,22 +65,24 @@ int cp(const char *to, const char *from){
   out_error:
     saved_errno = errno;
 
-    close(fd_from);
+    if (fd_from >= 0)
+        close(fd_from);
     if (fd_to >= 0)
         close(fd_to);
 
     errno = saved_errno;
-    return -1;
+    return saved_errno;
 }
 
 int main(int argc, char * argv[]) {
   int status = EX_ERROR;
-  
+
   if(argc<3){
-  	printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
-  	return status;
+        printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
+        return status;
   }else{
-  	return cp(argv[1],argv[2]);
+        return cp( argv[1], argv[2] );
   }
 
 }
+
