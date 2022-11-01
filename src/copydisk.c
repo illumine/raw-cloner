@@ -15,7 +15,6 @@ Simple Copy of Static Buffer Size
 
 
 int cp( const char *from,  const char *to ){
-  printf("cp 1\n");
   int fd_to, fd_from;
   char buf[BUFSIZ ] = {'\0'};
   ssize_t nread;

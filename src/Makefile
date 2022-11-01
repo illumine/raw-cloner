@@ -45,6 +45,9 @@ rawcloner: rawcloner.o user-options.o logger.o stats.o util.o
 
 copydisk: copydisk.c
 	$(CC) copydisk.c -o copydisk $(CFLAGS)
+	
+rcopydisk: rcopydisk.c
+	$(CC) rcopydisk.c -o rcopydisk $(CFLAGS)
 
 install: all
 	mv raw-cloner /bin/raw-cloner

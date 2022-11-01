@@ -47,3 +47,6 @@ rawcloner: rawcloner.o user-options.o logger.o util.o stats.o
 	
 copydisk: copydisk.c
 	$(CC) copydisk.c -o copydisk $(CFLAGS)
+	
+rcopydisk: rcopydisk.c
+	$(CC) rcopydisk.c -o rcopydisk $(CFLAGS)
