@@ -11,63 +11,113 @@ Simple Copy of Static Buffer Size
 #include <errno.h>
 #include <stdio.h>
 #define EX_ERROR 1
-
-
+#define MAX_READ_RETRIES 3
 
 int cp( const char *from,  const char *to ){
-  int fd_to, fd_from;
+  int fdi, fdo;
   char buf[BUFSIZ ] = {'\0'};
-  ssize_t nread;
+  ssize_t nread, source_size, times_read;
   int saved_errno;
 
     printf("Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
 
-    fd_from = open(from, O_RDONLY);
-    if (fd_from < 0){
-        printf("Error opening %s file to read.\n", from);
-        goto out_error;
-        }
-
-    fd_to = open(to, O_WRONLY | O_CREAT);
-    if (fd_to < 0){
-        printf("Error opening %s file to write.\n", to);
-        goto out_error;
-        }
-
-    while (nread = read(fd_from, buf, sizeof buf), nread > 0){
-        char *out_ptr = buf;
-        ssize_t nwritten;
-
-        do {
-            nwritten = write(fd_to, out_ptr, nread);
-
-            if (nwritten >= 0){
-                nread -= nwritten;
-                out_ptr += nwritten;
-            }else if (errno != EINTR){
-                goto out_error;
-            }
-        } while (nread > 0);
+    fdi = open(from, O_RDONLY);
+    if (fdi < 0){
+       printf("Error opening %s file to read.\n", from);
+       goto out_error;
     }
-
-    if (nread == 0){
-        if (close(fd_to) < 0){
-            fd_to = -1;
-            goto out_error;
-        }
-        close(fd_from);
-
-        /* Success! */
-        return 0;
+        
+    fdo = open(to, O_WRONLY | O_CREAT);
+    if (fdo < 0){
+       printf("Error opening %s file to write.\n", to);
+       goto out_error;
     }
+	
+    /* Get the source file/disk size. Seek to fdi END of the file/disk */
+    source_size = lseek(fdi, 0, SEEK_END);
+    if( source_size < 0){
+       printf("Error seeking source to SEEK_END.\n");
+       goto out_error;
+    }else{
+       printf("Source File/Disk size is: %ld bytes.\n", source_size);
+    }
+    /* Repositioning the file to the begining */
+    lseek(fdi, -source_size, SEEK_CUR);
+ 
+    times_read=0;
+    while( 1>0 ){
+      ssize_t nwritten, current_pos, buf_siz = sizeof buf;
+      int read_retries=0;
+
+    read_form_disk:  
+      read_retries=0;
+      for( read_retries =0; read_retries < MAX_READ_RETRIES; read_retries++ ){
+	 times_read++;     
+         nread = read(fdi, buf, buf_siz);
+         if( nread < 0 )
+	    /* ERROR do retry read */
+	    continue;
+         else if (nread == 0 )
+	    /* EOF */	
+	    break;
+	 else{
+	    /* Read OK, Write the butes */
+            nwritten = write(fdo, buf, nread);
+	    if( nwritten < 0 ){ 
+               printf("Could not write %ld bytes to %s. Aborting.\n",nwritten, to );
+	       goto out_error;
+	    }else	       
+	       printf("\rRead %ld bytes, Written %ld bytes for %ld times.",nread, nwritten, times_read);
+	    break;
+	}
+       
+     }
+     
+     /* Problem on reading: we could not read after MAX_READ_RETRIES: Cut buffer siz in the middle and try again */
+     if( read_retries == MAX_READ_RETRIES && buf_siz > 0 ){
+	printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(buf_siz/2) );
+	buf_siz = (ssize_t)(buf_siz/2);
+        goto read_form_disk;
+     }
+
+    /* Problem on reading: we could not read after MAX_READ_RETRIES with a buffer of 1 byte. Move the file position 1 byte forward */
+     if( read_retries == MAX_READ_RETRIES && buf_siz == 1 ){
+	printf("Read Retries %d completed for a buffer of ONE BYTE failed. Making new buffer size %ld bytes and moving file position ONE BYTE Forward.\n", read_retries, sizeof buf );
+	lseek(fdi, 1, SEEK_CUR);
+        buf_siz = sizeof buf;
+        goto read_form_disk;
+     }
+
+     current_pos = lseek(fdi, 0, SEEK_CUR);
+     if( current_pos < 0 ){
+        printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
+	goto out_error;
+     }
+
+     if( current_pos == source_size ){
+	printf("Reached end of file at %ld bytes.\n",current_pos);     
+        break;
+     }
+
+   }//while
+
+
+   if (close(fdo) < 0){
+       fdo = -1;
+       goto out_error;
+   }
+   close(fdi);
+
+   /* Success! */
+   return 0;
 
   out_error:
     saved_errno = errno;
 
-    if (fd_from >= 0)
-        close(fd_from);
-    if (fd_to >= 0)
-        close(fd_to);
+    if (fdi >= 0)
+        close(fdi);
+    if (fdo >= 0)
+        close(fdo);
 
     errno = saved_errno;
     return saved_errno;
@@ -75,13 +125,12 @@ int cp( const char *from,  const char *to ){
 
 int main(int argc, char * argv[]) {
   int status = EX_ERROR;
-
+  
   if(argc<3){
-        printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
-        return status;
+  	printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
+  	return status;
   }else{
-        return cp( argv[1], argv[2] );
+  	return cp( argv[1], argv[2] );
   }
 
 }
-
