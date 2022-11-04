@@ -45,39 +45,45 @@ int cp( const char *from,  const char *to ){
     /* Repositioning the file to the begining */
     lseek(fdi, -source_size, SEEK_CUR);
  
+    /* Reading the file loop */
     times_read=0;
-    while( 1>0 ){
+    while(1){
       ssize_t nwritten, current_pos, buf_siz = sizeof buf;
       int read_retries=0;
 
-    read_form_disk:  
-      read_retries=0;
+    read_form_disk:
+      current_pos = lseek(fdi, 0, SEEK_CUR);  
+      if( current_pos < 0 ){
+         printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
+         goto out_error;
+      }
+      
       for( read_retries =0; read_retries < MAX_READ_RETRIES; read_retries++ ){
-	 times_read++;     
+         times_read++;     
          nread = read(fdi, buf, buf_siz);
          if( nread < 0 )
 	    /* ERROR do retry read */
-	    continue;
+            continue;
          else if (nread == 0 )
 	    /* EOF */	
-	    break;
-	 else{
+            break;
+        else{
 	    /* Read OK, Write the butes */
             nwritten = write(fdo, buf, nread);
-	    if( nwritten < 0 ){ 
+            if( nwritten < 0 ){ 
                printf("Could not write %ld bytes to %s. Aborting.\n",nwritten, to );
-	       goto out_error;
-	    }else	       
-	       printf("\rRead %ld bytes, Written %ld bytes for %ld times.",nread, nwritten, times_read);
-	    break;
-	}
+	           goto out_error;
+            }else	       
+	           printf("\r%08x Read %ld bytes, Written %ld bytes for %ld times.",current_pos, nread, nwritten, times_read);
+            break;
+       }
        
      }
      
      /* Problem on reading: we could not read after MAX_READ_RETRIES: Cut buffer siz in the middle and try again */
      if( read_retries == MAX_READ_RETRIES && buf_siz > ONE_BYTE ){
-	printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(buf_siz/2) );
-	buf_siz = (ssize_t)(buf_siz/2);
+        printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(buf_siz/2) );
+	    buf_siz = (ssize_t)(buf_siz/2);
         goto read_form_disk;
      }
 
@@ -93,11 +99,11 @@ int cp( const char *from,  const char *to ){
      current_pos = lseek(fdi, 0, SEEK_CUR);
      if( current_pos < 0 ){
         printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
-	goto out_error;
+        goto out_error;
      }
 
      if( current_pos == source_size ){
-	printf("Reached end of file at %ld bytes.\n",current_pos);     
+        printf("Reached end of file at %ld bytes.\n",current_pos);     
         break;
      }
 
