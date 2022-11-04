@@ -83,8 +83,9 @@ int cp( const char *from,  const char *to ){
 
     /* Problem on reading: we could not read after MAX_READ_RETRIES with a buffer of 1 byte. Move the file position 1 byte forward */
      if( read_retries == MAX_READ_RETRIES && buf_siz == ONE_BYTE ){
-	printf("Read Retries %d completed for a buffer of ONE BYTE failed. Making new buffer size %ld bytes and moving file position ONE BYTE Forward.\n", read_retries, sizeof buf );
-	lseek(fdi, ONE_BYTE, SEEK_CUR);
+        printf("Read Retries %d completed for a buffer of ONE BYTE failed. Making new buffer size %ld bytes and moving file position ONE BYTE Forward.\n", read_retries, sizeof buf );
+        current_pos = lseek(fdi, ONE_BYTE, SEEK_CUR);
+        printf("File position moved to %ld.\n", current_pos);
         buf_siz = sizeof buf;
         goto read_form_disk;
      }
@@ -121,6 +122,7 @@ int cp( const char *from,  const char *to ){
         close(fdo);
 
     errno = saved_errno;
+    printf("Errno %d reported: %s\n",errno,strerror(errno));
     return saved_errno;
 }
 
