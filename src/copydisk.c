@@ -12,6 +12,7 @@ Simple Copy of Static Buffer Size
 #include <stdio.h>
 #define EX_ERROR 1
 #define MAX_READ_RETRIES 3
+#define ONE_BYTE 1
 
 int cp( const char *from,  const char *to ){
   int fdi, fdo;
@@ -74,16 +75,16 @@ int cp( const char *from,  const char *to ){
      }
      
      /* Problem on reading: we could not read after MAX_READ_RETRIES: Cut buffer siz in the middle and try again */
-     if( read_retries == MAX_READ_RETRIES && buf_siz > 0 ){
+     if( read_retries == MAX_READ_RETRIES && buf_siz > ONE_BYTE ){
 	printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(buf_siz/2) );
 	buf_siz = (ssize_t)(buf_siz/2);
         goto read_form_disk;
      }
 
     /* Problem on reading: we could not read after MAX_READ_RETRIES with a buffer of 1 byte. Move the file position 1 byte forward */
-     if( read_retries == MAX_READ_RETRIES && buf_siz == 1 ){
+     if( read_retries == MAX_READ_RETRIES && buf_siz == ONE_BYTE ){
 	printf("Read Retries %d completed for a buffer of ONE BYTE failed. Making new buffer size %ld bytes and moving file position ONE BYTE Forward.\n", read_retries, sizeof buf );
-	lseek(fdi, 1, SEEK_CUR);
+	lseek(fdi, ONE_BYTE, SEEK_CUR);
         buf_siz = sizeof buf;
         goto read_form_disk;
      }
