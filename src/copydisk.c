@@ -10,9 +10,33 @@ Simple Copy of Static Buffer Size
 #include <unistd.h>
 #include <errno.h>
 #include <stdio.h>
+#include <time.h>
 #define EX_ERROR 1
 #define MAX_READ_RETRIES 3
 #define ONE_BYTE 1
+
+
+/* Sleep for some miliseconds */
+int msleep(long msec){
+	
+    struct timespec ts;
+    int res;
+
+    if (msec < 0){
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
 
 int cp( const char *from,  const char *to ){
   int fdi, fdo;
@@ -52,6 +76,9 @@ int cp( const char *from,  const char *to ){
       int read_retries=0;
 
     read_form_disk:
+      /* Give some time not to overheat */
+	  msleep(3);
+	  		
       current_pos = lseek(fdi, 0, SEEK_CUR);  
       if( current_pos < 0 ){
          printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
