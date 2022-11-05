@@ -53,15 +53,22 @@ READ:
 ```
 ## Algorithmic Performance
 
-- Best     Omega(n)   = n/b
+If $n$ - disk size in bytes size,  $b<<n$ is the buffer size in bytes, $r$ is the read retries and $e$ is the number of total error bytes,
+the performance of the algorithm has as follows:
+
+- Best     $Omega(n)   = n/b$ This is the case the disk has no errors. In that case, program will read $n/b$ times. 
 
 
-- Worst    Omicron(n) = n(b-1)r
+- Worst    $Omicron(n) = nrlog(b)$ This is the case, the disk is full of error bytes.
 
 
-- Average  Theta(n)   = bnr
+- Average  $Theta(n)   = (n-e)/b + erlog(b)$  This is the case disk has a $e$ error bytes, or $e/n$ is the probability of an error byte in the disk.
+For example if this percentage is 5%, then Average limit is : $(n-n*5%)/b + n5%log(b)$
 
-Where: n - problem size,  b<<n  buffer size, r retries 
+Those are the *theoritical limits of the algorithm*, however in practice, one has to encount also the sleep time before reads so that the disk
+will not be more damaged due to very fast concurent reads and CPU heat is increased.
+
+To give you an idea, if we set 1ms sleep interval, the time expected is multiplied by 1000....
 
 ## Arithmetics of terget platform
 ```
