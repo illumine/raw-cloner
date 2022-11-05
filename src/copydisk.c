@@ -5,12 +5,15 @@ Simple Copy of Static Buffer Size
 *****************************
 */
 
-
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
-#include <stdio.h>
 #include <time.h>
+
+
 #define EX_ERROR 1
 #define MAX_READ_RETRIES 3
 #define ONE_BYTE 1
@@ -37,8 +40,28 @@ int msleep(long msec){
     return res;
 }
 
+/* Sleep for some nanoseconds */
+int nsleep(long nanosec){
+	
+    struct timespec ts;
+    int res;
 
-int cp( const char *from,  const char *to ){
+    if (nanosec < 0){
+        errno = EINVAL;
+        return -1;
+    }
+
+    ts.tv_sec = 0;
+    ts.tv_nsec = nanosec;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
+}
+
+int cp( const char *from,  const char *to, ssize_t offset){
   int fdi, fdo;
   char buf[BUFSIZ ] = {'\0'};
   ssize_t nread, source_size, times_read;
@@ -69,6 +92,17 @@ int cp( const char *from,  const char *to ){
     /* Repositioning the file to the begining */
     lseek(fdi, -source_size, SEEK_CUR);
  
+ 
+    /* TEMPORARY to test if */
+    if(offset >= 0 ){
+    	 if( lseek(fdi, offset, SEEK_CUR) ){
+    	 	printf("Positioning  File/Disk to offset: %ld bytes.\n", offset);
+		 }else{
+            printf("Error seeking source to offset: %ld bytes.\n", offset);
+            goto out_error;		 	
+		 }
+	}
+ 
     /* Reading the file loop */
     times_read=0;
     while(1){
@@ -77,7 +111,7 @@ int cp( const char *from,  const char *to ){
 
     read_form_disk:
       /* Give some time not to overheat */
-	  msleep(3);
+	  nsleep(30);
 	  		
       current_pos = lseek(fdi, 0, SEEK_CUR);  
       if( current_pos < 0 ){
@@ -163,10 +197,10 @@ int main(int argc, char * argv[]) {
   int status = EX_ERROR;
   
   if(argc<3){
-  	printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
+  	printf("You need to specify\n%s input_disk output_disk offset\n",argv[0]);
   	return status;
   }else{
-  	return cp( argv[1], argv[2] );
+  	return cp( argv[1], argv[2], atol(argv[3]) );
   }
 
 }
