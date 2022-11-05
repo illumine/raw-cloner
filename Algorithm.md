@@ -59,7 +59,7 @@ the performance of the algorithm has as follows:
 - Best     $\Omega(n)   = n/b$ This is the case the disk has no errors. In that case, program will read $n/b$ times. 
 
 
-- Worst    $\Omicron(n) = nrlog(b)$ This is the case, the disk is full of error bytes.
+- Worst    $O(n) = nrlog(b)$ This is the case, the disk is full of error bytes.
 
 
 - Average  $\Theta(n)   = (n-e)/b + erlog(b)$  This is the case disk has a $e$ error bytes, or $e/n$ is the probability of an error byte in the disk.
