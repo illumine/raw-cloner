@@ -1,6 +1,8 @@
 # RAW CLONER
 
-A program to byte-by-byte clone a disk to another. **UNDER HEAVY DEVELOPMENT**
+**Currently UNDER HEAVY DEVELOPMENT**
+ 
+A program to byte-by-byte clone a disk. 
 
 Requires:
  
@@ -9,6 +11,8 @@ Requires:
 
 
 ## Algorithmic Performance
+
+Read the algorithm here: [](Algorithm.md). The performance of the algorithm is explained in the next lines.
 
 If $n$ - disk size in bytes size,  $b\ll n$ is the buffer size in bytes, $r$ is the read retries and $e$ is the number of total error bytes,
 the performance of the algorithm has as follows:
@@ -27,7 +31,7 @@ will not be more damaged due to very fast concurent reads and CPU heat is increa
 
 To give you an idea, if we set 1ms sleep interval, the time expected is multiplied by 1000....
   
-## Compilation
+## Compilation - How to build
 Requires git, gcc, make
 ```
 git clone https://github.com/illumine/raw-cloner
