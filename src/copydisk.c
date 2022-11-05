@@ -45,6 +45,7 @@ int nsleep(long nanosec){
 	
     struct timespec ts;
     int res;
+    usleep(2);
 
     if (nanosec < 0){
         errno = EINVAL;

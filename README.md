@@ -1,20 +1,31 @@
 # RAW CLONER
 
-A program to byte-by-byte clone a disk to another. Beta Version!!!
+A program to byte-by-byte clone a disk to another. **UNDER HEAVY DEVELOPMENT**
 
 Requires:
  
 * source and destination disks to be unmounted!
 * obviously destination disk size > source disk size 
 
-Performance: 
-Worst Case: Omikron(n) = n(b-1)r
 
-Average algoritmic limit Theta(n) = nbr
+## Algorithmic Performance
 
-Best Case: Omega(n) = n/b
+If $n$ - disk size in bytes size,  $b\ll n$ is the buffer size in bytes, $r$ is the read retries and $e$ is the number of total error bytes,
+the performance of the algorithm has as follows:
 
-n: disk size, b: buffer size, r: read retry
+- Best     $\Omega(n)   = n/b$ This is the case the disk has no errors. In that case, program will read $n/b$ times. 
+
+
+- Worst    $O(n) = nrlog(b)$ This is the case, the disk is full of error bytes.
+
+
+- Average  $\Theta(n)   = (n-e)/b + erlog(b)$  This is the case disk has a $e$ error bytes, or $e/n$ is the probability of an error byte in the disk.
+For example if this percentage is 5%, then Average limit is : $(n-.05n)/b + 0.05nlog(b)$
+
+Those are the *theoritical limits of the algorithm*, however in practice, one has to encount also the sleep time before reads so that the disk
+will not be more damaged due to very fast concurent reads and CPU heat is increased.
+
+To give you an idea, if we set 1ms sleep interval, the time expected is multiplied by 1000....
   
 ## Compilation
 Requires git, gcc, make
@@ -37,7 +48,7 @@ make install
 
 ## Tests
 
-### Linux
+### Linux Server used for tests
 ```
 root@darkstar:~/raw-cloner# cat  /proc/version
 Linux version 4.15.0-142-generic (buildd@lgw01-amd64-036) (gcc version 7.5.0 (Ubuntu 7.5.0-3ubuntu1~18.04)) #146-Ubuntu SMP Tue Apr 13 01:11:19 UTC 2021
@@ -58,7 +69,7 @@ raw-cloner: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically 
 
 ```
 
-### Windows System Information
+### Windows System used for tests
 
 ```
 OS Name	Microsoft Windows 10 Enterprise
