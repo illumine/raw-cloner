@@ -53,16 +53,16 @@ READ:
 ```
 ## Algorithmic Performance
 
-If $n$ - disk size in bytes size,  $b<<n$ is the buffer size in bytes, $r$ is the read retries and $e$ is the number of total error bytes,
+If $n$ - disk size in bytes size,  $b\ll n$ is the buffer size in bytes, $r$ is the read retries and $e$ is the number of total error bytes,
 the performance of the algorithm has as follows:
 
-- Best     $Omega(n)   = n/b$ This is the case the disk has no errors. In that case, program will read $n/b$ times. 
+- Best     $\Omega(n)   = n/b$ This is the case the disk has no errors. In that case, program will read $n/b$ times. 
 
 
-- Worst    $Omicron(n) = nrlog(b)$ This is the case, the disk is full of error bytes.
+- Worst    $\Omicron(n) = nrlog(b)$ This is the case, the disk is full of error bytes.
 
 
-- Average  $Theta(n)   = (n-e)/b + erlog(b)$  This is the case disk has a $e$ error bytes, or $e/n$ is the probability of an error byte in the disk.
+- Average  $\Theta(n)   = (n-e)/b + erlog(b)$  This is the case disk has a $e$ error bytes, or $e/n$ is the probability of an error byte in the disk.
 For example if this percentage is 5%, then Average limit is : $(n-n*5%)/b + n5%log(b)$
 
 Those are the *theoritical limits of the algorithm*, however in practice, one has to encount also the sleep time before reads so that the disk
