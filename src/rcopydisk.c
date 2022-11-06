@@ -1,23 +1,22 @@
-/*
+ /*
 *****************************
-Simple Reverse Copy of Static Buffer Size
+Simple Reverse Copy using a Static Buffer Size
 
 *****************************
 */
 
-
-#include <fcntl.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <errno.h>
-#include <stdio.h>
 #include <string.h>
-#define EX_ERROR 1
+#include <fcntl.h>
 
+#define EX_ERROR 1
+#define MAX_READ_RETRIES 3
 
 int rcp( const char *from,  const char *to ){
   int fdi, fdo;
-  char buffer[BUFSIZ ] = {'\0'};
-  ssize_t source_size, curr_offset, bytes_to_read, bytes_written, nr, nw, i, c;
+  ssize_t source_size, current_pos;
   int saved_errno;
 
     printf("Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
@@ -35,7 +34,7 @@ int rcp( const char *from,  const char *to ){
     }
 
 
-  /* Get the source file/disk size. Seek to fdi END of the file/disk */
+  /* Get the source file/disk size in bytes */
   source_size = lseek(fdi, 0, SEEK_END);
   if( source_size < 0){
     printf("Error seeking source to SEEK_END.\n");
@@ -44,53 +43,71 @@ int rcp( const char *from,  const char *to ){
     printf("Source File/Disk size is: %ld bytes.\n", source_size);
   }
 
-  curr_offset = lseek(fdo, source_size, SEEK_SET);
-  if( curr_offset < 0){
-    printf("Error seting destination to %ld.\n", source_size);
+  /* Seek SET  source file/disk to the END*/
+  current_pos = lseek(fdi, source_size, SEEK_SET);
+  if( current_pos < 0){
+    printf("Error seting source to %ld.\n", source_size);
     goto out_error;
   }else{
-    printf("Destination File/Disk offset is set to: %ld bytes.\n", curr_offset);
+    printf("Source File/Disk offset is set to: %ld bytes.\n", current_pos);
   }
 
-  curr_offset = lseek(fdo, 0, SEEK_CUR);
-  printf("Destination File/Disk offset currently: %ld bytes.\n", curr_offset);
 
-  curr_offset = 0;
-  while (curr_offset < source_size) {
+    /* Reading the file/disk loop in reverese */
 
-    if( curr_offset + BUFSIZ > source_size )
-       bytes_to_read = source_size - curr_offset;
-    else
-       bytes_to_read = BUFSIZ;
+  while (1) {
+     char buf[BUFSIZ ] = {'\0'};
+     ssize_t  buf_siz = sizeof buf, bytes_to_read, nread, nwritten;
+     int read_retries =0;
+     
+     if( buf_siz >= source_size )
+       bytes_to_read = source_size;
+     else if( buf_siz > source_size - current_pos )
+       bytes_to_read = source_size - current_pos;
+     else 
+       bytes_to_read = buf_siz;
+     printf("Bytes to read %ld.\n",bytes_to_read);   
+     
+     current_pos = lseek(fdi, -bytes_to_read, SEEK_CUR);
+     if( current_pos < 0){
+       printf("Error seting source File/Disk to %ld.\n", source_size);
+       goto out_error;
+     }else{
+       printf("Source File/Disk offset is set to: %ld bytes.\n", current_pos);
+     }     
 
-    /* Read source and reposition after read*/
-    lseek(fdi, -bytes_to_read, SEEK_CUR);
-    for(i=0; i< bytes_to_read; i++){
-       nr = read( fdi,&c, 1);
-       if( nr > 0 ){
-          buffer[i] = c;
-       }else if( nr == 0 ){
-          break; //EOF
-       }else
-          continue;  //ERROR byte
-    }
-    lseek(fdi, -bytes_to_read, SEEK_CUR);
+     for( read_retries =0; read_retries < MAX_READ_RETRIES; read_retries++ ){   
+         nread = read(fdi, buf, buf_siz);
+         if( nread < 0 )
+	    /* ERROR do retry read */
+            continue;
+         else if (nread == 0 )
+	    /* EOF */	
+            break;
+        else{
+	    /* Read OK, Write the butes */
+            //nwritten = write(fdo, buf, nread);
+            //write buffer
+            printf("%s",buf);
+            break;
+    	}
+	}
 
-    /* Write Destination and reposition after write */
-    lseek(fdo, -bytes_to_read, SEEK_CUR);
-    nw = write(fdo, buffer, bytes_to_read);
-    if( nw < 0){
-       printf("Failed write %ld to %s.\n", bytes_to_read, to);
-        goto out_error;
-    }else
-       bytes_written += bytes_to_read;
-    lseek(fdo, -bytes_to_read, SEEK_CUR);
 
-    /* Re-initialize buffer and increment offset */
-    memset (buffer, '\0', bytes_to_read);
-    curr_offset+=bytes_to_read;
+     current_pos = lseek(fdi, 0, SEEK_CUR);
+     if( current_pos < 0){
+       printf("Error getting the current offset from source File/Disk.\n");
+       goto out_error;
+     }else{
+       printf("Current source File/Disk offset %ld bytes.\n", current_pos);
+     }  
 
-  }
+     if( current_pos == source_size ){
+        printf("Reached end of file at %ld bytes.\n",current_pos);     
+        break;
+     }
+
+  }//while
 
 
   return 0;
@@ -118,3 +135,4 @@ int main(int argc, char * argv[]) {
   }
 
 }
+
