@@ -19,48 +19,7 @@ Simple Copy of Static Buffer Size
 #define ONE_BYTE 1
 
 
-/* Sleep for some miliseconds */
-int msleep(long msec){
-	
-    struct timespec ts;
-    int res;
 
-    if (msec < 0){
-        errno = EINVAL;
-        return -1;
-    }
-
-    ts.tv_sec = msec / 1000;
-    ts.tv_nsec = (msec % 1000) * 1000000;
-
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
-
-    return res;
-}
-
-/* Sleep for some nanoseconds */
-int nsleep(long nanosec){
-	
-    struct timespec ts;
-    int res;
-    usleep(2);
-
-    if (nanosec < 0){
-        errno = EINVAL;
-        return -1;
-    }
-
-    ts.tv_sec = 0;
-    ts.tv_nsec = nanosec;
-
-    do {
-        res = nanosleep(&ts, &ts);
-    } while (res && errno == EINTR);
-
-    return res;
-}
 
 int cp( const char *from,  const char *to, ssize_t offset){
   int fdi, fdo;
@@ -112,7 +71,7 @@ int cp( const char *from,  const char *to, ssize_t offset){
 
     read_form_disk:
       /* Give some time not to overheat */
-	  nsleep(30);
+	  usleep(5);
 	  		
       current_pos = lseek(fdi, 0, SEEK_CUR);  
       if( current_pos < 0 ){
