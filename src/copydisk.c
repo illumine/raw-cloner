@@ -24,7 +24,7 @@ Simple Copy of Static Buffer Size
 int cp( const char *from,  const char *to, ssize_t offset){
   int fdi, fdo;
   char buf[BUFSIZ ] = {'\0'};
-  ssize_t nread, source_size, times_read;
+  ssize_t source_size, times_read;
   int saved_errno;
 
     printf("Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
@@ -66,7 +66,7 @@ int cp( const char *from,  const char *to, ssize_t offset){
     /* Reading the file loop */
     times_read=0;
     while(1){
-      ssize_t nwritten, current_pos, buf_siz = sizeof buf;
+      ssize_t nread, nwritten, current_pos, buf_siz = sizeof buf;
       int read_retries=0;
 
     read_form_disk:

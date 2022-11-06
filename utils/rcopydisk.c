@@ -15,7 +15,7 @@ Simple Reverse Copy using a Static Buffer Size
 #define MAX_READ_RETRIES 3
 
 int rcp( const char *from,  const char *to ){
-  int fdi=-1, fdo=-1;
+  int fdi, fdo;
   ssize_t source_size, current_pos;
   int saved_errno; 
   
@@ -27,7 +27,7 @@ int rcp( const char *from,  const char *to ){
         goto out_error;
     }
 
-    fdo = open(to, O_WRONLY | O_CREAT, 0600);
+    fdo = open(to, O_WRONLY | O_CREAT);
     if (fdo < 0){
         printf("Error opening %s file to write.\n", to);
         goto out_error;
@@ -69,73 +69,34 @@ int rcp( const char *from,  const char *to ){
 
   size_t reads = (size_t)(source_size / buf_size);
   for( size_t i = 0 ; i < reads; i++){
-     /* Initialize buffer */
-      memset(buf,0,buf_size);
-
-     /* Read buffer from in */
-     current_pos = lseek(fdi, -buf_size, SEEK_CUR);
-     char could_read = 'n';
-     for( int read_retries =0; read_retries < MAX_READ_RETRIES; read_retries++ ){
-        if( read(fdi, buf, buf_size) < 0){
-           could_read = 'n';
-	   continue;
-	}else{
-	   could_read = 'y';
-           break;
-	}
-     }
      lseek(fdi, -buf_size, SEEK_CUR);
-     if( could_read == 'n' ){
-        printf("\r%08lx -> Could not read %ld bytes from %s.\n", current_pos, buf_size, from);
-     } 
+     memset(buf,0,buf_size);
+     read(fdi, buf, buf_size);
+     lseek(fdi, -buf_size, SEEK_CUR);
 
-     /* Write buffer to out */
-     current_pos = lseek(fdo, -buf_size, SEEK_CUR);
-     if( write(fdo, buf, buf_size) < 0){
-        printf("\r%08lx -> Could not write %ld bytes to %s.\n", current_pos, buf_size, to);
-	goto  out_error;
-     } 
+     lseek(fdo, -buf_size, SEEK_CUR);
+     write(fdo, buf, buf_size);
      lseek(fdo, -buf_size, SEEK_CUR);
      
      /* Give some time not to overheat */
-     usleep(5);
+	 usleep(5);
   }
-
-  /* Read and write the remaining bytes of the file */
-  memset(buf,0,buf_size);
- 
   buf_size = source_size - reads * buf_size;
-  
-  current_pos = lseek(fdi, -buf_size, SEEK_CUR);
-  char could_read = 'n';
-  for( int read_retries =0; read_retries < MAX_READ_RETRIES; read_retries++ ){
-     if( read(fdi, buf, buf_size) < 0){
-         could_read = 'n';
-         continue;
-     }else{
-        could_read = 'y';
-        break;
-     }
-  }
   lseek(fdi, -buf_size, SEEK_CUR);
-  if( could_read == 'n' ){
-      printf("\r%08lx -> Could not read %ld bytes from %s.\n", current_pos, buf_size, from);
-  }
-  /* Write the remaining bytes to out */
-  current_pos = lseek(fdo, -buf_size, SEEK_CUR);
-  if( write(fdo, buf, buf_size) < 0){
-      printf("\r%08lx -> Could not write %ld bytes to %s.\n", current_pos, buf_size, to);
-      goto  out_error;
-  }
+  memset(buf,0,buf_size);
+  read(fdi, buf, buf_size);
+  
+  lseek(fdo, -buf_size, SEEK_CUR);
+  write(fdo, buf, buf_size);
 
 
-  if (close(fdo) < 0){
-     fdo = -1;
-     goto out_error;
-  }
-  close(fdi);
+   if (close(fdo) < 0){
+       fdo = -1;
+       goto out_error;
+   }
+   close(fdi);
 
-  /* Success! */
+   /* Success! */
   return 0;
 
 
