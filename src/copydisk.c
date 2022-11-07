@@ -13,8 +13,6 @@ Simple Copy of Static Buffer Size
 #include <errno.h>
 #include <time.h>
 
-
-#define EX_ERROR 1
 #define MAX_READ_RETRIES 3
 #define ONE_BYTE 1
 
@@ -22,21 +20,23 @@ Simple Copy of Static Buffer Size
 
 
 int cp( const char *from,  const char *to, ssize_t offset){
-  int fdi, fdo;
+  int fdi=-1, fdo=-1;
   char buf[BUFSIZ ] = {'\0'};
   ssize_t source_size, times_read;
-  int saved_errno;
+  int saved_errno = 0;
 
-    printf("Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
+    printf("Copy from %s to %s using %d bytes buffer.\n", from, to, BUFSIZ);
 
     fdi = open(from, O_RDONLY);
     if (fdi < 0){
+       saved_errno = errno;
        printf("Error opening %s file to read.\n", from);
        goto out_error;
     }
         
     fdo = open(to, O_WRONLY | O_CREAT);
     if (fdo < 0){
+       saved_errno = errno;    	
        printf("Error opening %s file to write.\n", to);
        goto out_error;
     }
@@ -44,7 +44,8 @@ int cp( const char *from,  const char *to, ssize_t offset){
     /* Get the source file/disk size. Seek to fdi END of the file/disk */
     source_size = lseek(fdi, 0, SEEK_END);
     if( source_size < 0){
-       printf("Error seeking source to SEEK_END.\n");
+       saved_errno = errno;    	
+       printf("Error seeking source File/Disk to SEEK_END.\n");
        goto out_error;
     }else{
        printf("Source File/Disk size is: %ld bytes.\n", source_size);
@@ -56,8 +57,9 @@ int cp( const char *from,  const char *to, ssize_t offset){
     /* TEMPORARY to test if */
     if(offset >= 0 ){
     	 if( lseek(fdi, offset, SEEK_CUR) ){
-    	 	printf("Positioning  File/Disk to offset: %ld bytes.\n", offset);
+    	 	printf("Positioning source File/Disk to offset: %ld bytes.\n", offset);
 		 }else{
+            saved_errno = errno;		 	
             printf("Error seeking source to offset: %ld bytes.\n", offset);
             goto out_error;		 	
 		 }
@@ -70,11 +72,12 @@ int cp( const char *from,  const char *to, ssize_t offset){
       int read_retries=0;
 
     read_form_disk:
-      /* Give some time not to overheat */
+      /* Give some microseconds sleep period so disk/cpu won't overheat */
 	  usleep(5);
 	  		
       current_pos = lseek(fdi, 0, SEEK_CUR);  
       if( current_pos < 0 ){
+      	 saved_errno = errno;
          printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
          goto out_error;
       }
@@ -92,6 +95,7 @@ int cp( const char *from,  const char *to, ssize_t offset){
 	    /* Read OK, Write the butes */
             nwritten = write(fdo, buf, nread);
             if( nwritten < 0 ){ 
+               saved_errno = errno;            
                printf("Could not write %ld bytes to %s. Aborting.\n",nwritten, to );
 	           goto out_error;
             }else	       
@@ -119,6 +123,7 @@ int cp( const char *from,  const char *to, ssize_t offset){
 
      current_pos = lseek(fdi, 0, SEEK_CUR);
      if( current_pos < 0 ){
+     	saved_errno = errno;
         printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
         goto out_error;
      }
@@ -131,30 +136,34 @@ int cp( const char *from,  const char *to, ssize_t offset){
    }//while
 
 
-   if (close(fdo) < 0){
-       fdo = -1;
-       goto out_error;
+   if(close(fdo) < 0){
+      saved_errno = errno;
+      printf("Could not close %s.\n",to);
+      fdo=-1;
+      goto out_error;
    }
-   close(fdi);
+   if( close(fdi) < 0){
+      saved_errno = errno;
+      printf("Could not close %s.\n",from);
+      fdi=-1;      
+      goto out_error;   	
+   }
 
    /* Success! */
    return 0;
 
   out_error:
-    saved_errno = errno;
-
     if (fdi >= 0)
         close(fdi);
     if (fdo >= 0)
         close(fdo);
 
-    errno = saved_errno;
-    printf("Errno %d reported: %s\n",errno,strerror(errno));
+    printf("System Error %d reported: %s\n",saved_errno,strerror(saved_errno));
     return saved_errno;
 }
 
 int main(int argc, char * argv[]) {
-  int status = EX_ERROR;
+  int status = EXIT_FAILURE;
   
   if(argc<3){
   	printf("You need to specify\n%s input_disk output_disk offset\n",argv[0]);
