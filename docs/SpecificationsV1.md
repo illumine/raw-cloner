@@ -4,6 +4,10 @@
 * Disk Map in a format compatible with `ddrescue`
 * Have Configurable timeout on read. Typical values 2-10 1000 ms
 
+## `ddrescue` output format
+```
+example of out
+```
 
 ## Technical Specifications
 * Command line tool
