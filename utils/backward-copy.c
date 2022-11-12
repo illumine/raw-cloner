@@ -10,80 +10,66 @@
 #include <errno.h>
 
 
-#define BS 100
 
-#define ONE_BYTE 1
-#define SOURCE 0
-#define DESTINATION 1
-#define EX_ERROR 1
-#define EX_OK 0
 
 void copy_backwards( char *in, char *out){
 
   int fdi = -1, fdo = -1;
   char msg[BUFSIZ] = {'\0'};
-  size_t bytes_read = 0, buf_size = 0, bytes_writen = 0, curr_offset = 0, source_size =0;                                                                                                           _size =0;
+  size_t bytes_read = 0, buf_size = 0, source_size = 0, curr_offset=0;                                                                                                           
   char * buffer = NULL;
-
 
   fdi = open( in, O_RDONLY);
   if (fdi < 0) {
-    sprintf(msg, "\nError opening %s for read.\n", in);
-    perror(msg);
-    exit(EX_ERROR);
+    perror("Error opening input for read.\n");
+    goto exit_;
   } else {
-    printf("\nSource %s opened for read.\n", in);
+    printf("Source %s opened for read.\n", in);
   }
 
   fdo = open(out, O_WRONLY | O_CREAT, 0644);
   if (fdo < 0) {
-    sprintf(msg, "\nError opening file %s for write.\n", out);
-    perror(msg);
-    exit(EX_ERROR);
+    perror("Error opening output for write.\n");
+    goto exit_;
   } else {
-    printf("\nDestination %s bytes opened for writing.\n", out);
+    printf("Destination %s opened for writing.\n", out);
   }
 
   /* Initial Buffer Allocation according to user defined params*/
-  if ((buffer = (char * ) calloc( BS, sizeof(char))) == NULL) {
-    sprintf(msg, "\nError allocating buffer of size %d. Consider using a smaller buffer size.\n", BS);                                                                                                          buffer size.\n", BS);
-    perror(msg);
-    exit(EX_ERROR);
+  if ((buffer = (char * ) calloc( BUFSIZ, sizeof(char))) == NULL) {
+    perror("Error allocating buffer. Consider using a smaller buffer size.\n");                                                                                                        
+    goto exit_;
   }else{
-    bzero(buffer,BS);
-    printf("\nBuffer of size %d bytes was allocated\n",BS);
+    printf("Buffer of size %d bytes was allocated\n",BUFSIZ);
   }
 
-  /* Get the source file/disk size. Seek to fdi END of the file/disk just before                                                                                                              EOF */
-  //source_size = info_lseek(fdi, -1, SEEK_END, SOURCE, msg, 1);
+  /* Get the source file/disk size. Seek to fdi END of the file/disk just before EOF */
   source_size = lseek(fdi, 0, SEEK_END);
   if( source_size < 0){
-    sprintf(msg, "\nError seeking source to SEEK_END.\n");
-    perror(msg);
-    exit(EX_ERROR);
+    perror("Error seeking source to SEEK_END.\n");
+    goto exit_;
   }
-  printf("\nSource File/Disk size is: %ld bytes.\n", source_size);
+  printf("Source File/Disk size is: %ld bytes.\n", source_size);
 
   curr_offset = lseek(fdo, source_size, SEEK_SET);
   if( curr_offset < 0){
-    sprintf(msg, "\nError seeking destination to SEEK_SET.\n");
-    perror(msg);
-    exit(EX_ERROR);
+    perror("Error seeking destination to SEEK_SET.\n");
+    goto exit_;
   }
-  printf("\nDestination File/Disk offset is set to: %ld bytes.\n", curr_offset);
+  printf("Destination File/Disk offset is set to: %ld bytes.\n", curr_offset);
   curr_offset = lseek(fdo, 0, SEEK_CUR);
-  printf("\nDestination File/Disk offset currently: %ld bytes.\n", curr_offset);
+  printf("Destination File/Disk offset currently: %ld bytes.\n", curr_offset);
 
   size_t bytes_to_read =0;
   int i =0, nr =0,nw=0;
   char c;
   curr_offset = 0;
   while (curr_offset < source_size) {
-
-    if( curr_offset + BS > source_size )
+    memset(buffer,0,BUFSIZ);
+    if( curr_offset + BUFSIZ > source_size )
        bytes_to_read = source_size - curr_offset;
     else
-       bytes_to_read = BS;
+       bytes_to_read = BUFSIZ;
 
     lseek(fdi, -bytes_to_read, SEEK_CUR);
     for(i=0; i< bytes_to_read; i++){
@@ -92,22 +78,24 @@ void copy_backwards( char *in, char *out){
           buffer[i] = c;
     }
     lseek(fdi, -bytes_to_read, SEEK_CUR);
-
     lseek(fdo, -bytes_to_read, SEEK_CUR);
     nw = write(fdo, buffer, bytes_to_read);
     lseek(fdo, -bytes_to_read, SEEK_CUR);
-    bzero(buffer,bytes_to_read);
     curr_offset+=bytes_to_read;
 
   } //while
 
 
+exit_:
+	
   /* post processing steps */
-  free(buffer);
-  close(fdi);
-  close(fdo);
-  return;
-
+  if(buffer)
+     free(buffer);
+  if(fdi>0)
+    close(fdi);
+  if(fdo >0)
+    close(fdo);
+    
 }
 
 
@@ -119,9 +107,11 @@ int main(int argc, char * argv[]) {
 
   if( argc < 3) {
       printf("\nUsage: backwards [filename] [out-filename]\n");
-      return 1;
+      return EXIT_FAILURE;
   }
+  
   copy_backwards( argv[1], argv[2]);
-  return 0;
+  
+  return EXIT_SUCCESS;
 }
 

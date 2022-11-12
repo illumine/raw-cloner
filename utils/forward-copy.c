@@ -14,32 +14,35 @@ Simple Copy of Static Buffer Size
 
 
 
-int cp( const char *from,  const char *to ){
-  int fd_to, fd_from;
-  char buf[BUFSIZ ] = {'\0'};
+int copy_forward( const char *from,  const char *to ){
+  int fdi, fdo;
+  char buffer[BUFSIZ ] = {'\0'};
   ssize_t nread;
-  int saved_errno;
 
-    printf("Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
+  printf("Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
 
-    fd_from = open(from, O_RDONLY);
-    if (fd_from < 0){
-        printf("Error opening %s file to read.\n", from);
-        goto out_error;
-        }
+  fdi = open( from, O_RDONLY);
+  if (fdi < 0) {
+    perror("Error opening input for read.\n");
+    goto out_error;
+  } else {
+    printf("Source %s opened for read.\n", from);
+  }
 
-    fd_to = open(to, O_WRONLY | O_CREAT);
-    if (fd_to < 0){
-        printf("Error opening %s file to write.\n", to);
-        goto out_error;
-        }
+  fdo = open(to, O_WRONLY | O_CREAT, 0644);
+  if (fdo < 0) {
+    perror("Error opening output for write.\n");
+    goto out_error;
+  } else {
+    printf("Destination %s opened for writing.\n", to);
+  }
 
-    while (nread = read(fd_from, buf, sizeof buf), nread > 0){
-        char *out_ptr = buf;
-        ssize_t nwritten;
+  while (nread = read(fdi, buffer, sizeof buffer), nread > 0){
+     char *out_ptr = buffer;
+     ssize_t nwritten;
 
         do {
-            nwritten = write(fd_to, out_ptr, nread);
+            nwritten = write(fdo, out_ptr, nread);
 
             if (nwritten >= 0){
                 nread -= nwritten;
@@ -51,26 +54,23 @@ int cp( const char *from,  const char *to ){
     }
 
     if (nread == 0){
-        if (close(fd_to) < 0){
-            fd_to = -1;
+        if (close(fdo) < 0){
+            fdo = -1;
             goto out_error;
         }
-        close(fd_from);
+        close(fdi);
 
         /* Success! */
         return 0;
     }
 
   out_error:
-    saved_errno = errno;
 
-    if (fd_from >= 0)
-        close(fd_from);
-    if (fd_to >= 0)
-        close(fd_to);
-
-    errno = saved_errno;
-    return saved_errno;
+    if (fdi >= 0)
+        close(fdi);
+    if (fdo >= 0)
+        close(fdo);
+    return -1;
 }
 
 int main(int argc, char * argv[]) {
@@ -80,7 +80,7 @@ int main(int argc, char * argv[]) {
         printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
         return status;
   }else{
-        return cp( argv[1], argv[2] );
+        return copy_forward( argv[1], argv[2] );
   }
 
 }
