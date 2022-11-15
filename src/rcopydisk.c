@@ -14,7 +14,7 @@ Simple Reverse Copy using a Static Buffer Size
 
 #define MAX_READ_RETRIES 3
 
-int rcp( const char *from,  const char *to ){
+int copy_backwards_buffered( const char *from,  const char *to ){
   int fdi=-1, fdo=-1;
   ssize_t source_size, current_pos;
   int saved_errno; 
@@ -168,7 +168,7 @@ int main(int argc, char * argv[]) {
         printf("You need to specify\n%s input_disk output_disk\n",argv[0]);
         return status;
   }else{
-        return rcp( argv[1], argv[2] );
+        return copy_backwards_buffered( argv[1], argv[2] );
   }
 
 }

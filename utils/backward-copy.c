@@ -1,3 +1,12 @@
+ /*
+*****************************
+Backward Copy: Copies backwards a file/disk.
+Reads BYTE by BYTE backwards. 
+If a byte cannot be read, it sets ASCII 0 to the buffer
+Buffer is written to the destination 
+*****************************
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,14 +19,19 @@
 #include <errno.h>
 
 
-
+#define VERSION "v1.0"
+#define VERSION_DATE "15/11/2021"
 
 void copy_backwards( char *in, char *out){
 
   int fdi = -1, fdo = -1;
-  char msg[BUFSIZ] = {'\0'};
-  size_t bytes_read = 0, buf_size = 0, source_size = 0, curr_offset=0;                                                                                                           
+  size_t  source_size = 0, curr_offset=0;                                                                                                           
   char * buffer = NULL;
+
+  printf("Reads a file/disk input backwards byte by byte.\n\
+  If a byte cannot be read from input, it is replaced by ASCII 0 to the buffer.\n\
+  Buffer is subsequently written to output.\n");
+
 
   fdi = open( in, O_RDONLY);
   if (fdi < 0) {
@@ -84,7 +98,8 @@ void copy_backwards( char *in, char *out){
     curr_offset+=bytes_to_read;
 
   } //while
-
+  printf("Completed at byte offset %ld.\n",curr_offset);
+  return;
 
 exit_:
 	
@@ -104,7 +119,8 @@ exit_:
 
 
 int main(int argc, char * argv[]) {
-
+	
+  printf("%s %s %s\n",argv[0], VERSION, VERSION_DATE );
   if( argc < 3) {
       printf("\nUsage: backwards [filename] [out-filename]\n");
       return EXIT_FAILURE;
