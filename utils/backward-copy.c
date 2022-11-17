@@ -20,12 +20,12 @@ Buffer is written to the destination
 
 
 #define VERSION "v1.0"
-#define VERSION_DATE "15/11/2021"
+#define VERSION_DATE "16/11/2021"
 
 void copy_backwards( char *in, char *out){
 
   int fdi = -1, fdo = -1;
-  size_t  source_size = 0, curr_offset=0;                                                                                                           
+  ssize_t  source_size = 0, curr_offset=0;                                                                                                           
   char * buffer = NULL;
 
   printf("Reads a file/disk input backwards byte by byte.\n\

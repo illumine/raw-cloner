@@ -9,18 +9,20 @@
 #include <sys/select.h>
 #endif
 
-#define VERSION "v1.0"
-#define VERSION_DATE "15/11/2021"
-
 #define E_TIMEOUT (-1)
 #define E_SELECT  (-2)
 #define E_RETRIES (-3)
+
+
+#define VERSION "v1.0"
+#define VERSION_DATE "16/11/2021"
+
 int read_with_timeout_and_retries( int fdi, char * buffer, size_t buffer_size, int retries, time_t microseconds){
 #ifdef __linux__
   fd_set set;
   struct timeval timeout;
   int rv;
-  size_t nread;
+  ssize_t nread;
 
   for(int i=0; i<retries; i++){
      /*
@@ -60,38 +62,38 @@ int read_with_timeout_and_retries( int fdi, char * buffer, size_t buffer_size, i
 int main(int argc, char * argv[]) {
 
   int fdi=-1;
-  char   buffer[BUFSIZ];
-  size_t source_size, nread, reads, errors;
 
   printf("%s %s %s\n",argv[0], VERSION, VERSION_DATE );
   if(argc<2){
-        printf("You need to specify\n%s input_disk\n",argv[0]);
-        exit(EXIT_FAILURE);
+     printf("You need to specify\n%s input_disk\n",argv[0]);
+     exit(EXIT_FAILURE);
   }
 
-    printf("Performs a read with timeout 400 micros and 3 retries from %s using %d buffersize\n", argv[1], BUFSIZ);
+  printf("Performs a read with timeout 400 micros and 3 retries from %s using %d buffersize\n", argv[1], BUFSIZ);
 
-    fdi = open(argv[1], O_RDONLY);
-    if (fdi < 0){
-       printf("Error opening %s source to read.\n", argv[1]);
-       exit(EXIT_FAILURE);
-    }
-    printf("File descriptor (fdi) %d\n",fdi);
+  fdi = open(argv[1], O_RDONLY);
+  if(fdi < 0){
+     printf("Error opening %s source to read.\n", argv[1]);
+     exit(EXIT_FAILURE);
+  }
+  printf("File descriptor (fdi) %d\n",fdi);
 
-    source_size =0; reads=0; errors =0;
-    while(  nread = read_with_timeout_and_retries(fdi, buffer, sizeof buffer, 3, 100) , nread != 0 ){
-      reads++;
-      if( nread > 0 )
-         source_size += nread;
-      else
-         errors++;
-    }
+  ssize_t nread;
+  size_t  reads=0; errors =0;
+  char buffer[BUFSIZ];
+  while(  nread = read_with_timeout_and_retries(fdi, buffer, sizeof buffer, 3, 100) , nread != 0 ){
+     reads++;
+     if( nread > 0 )
+        source_size += nread;
+     else
+     errors++;
+  }
 
-    if (fdi >= 0)
-      close(fdi);
+  if (fdi >= 0)
+    close(fdi);
 
-    printf("Completed. Read %ld bytes wiith %ld reads, read errors (timeouts + retries) %ld\n", source_size, reads, errors);
+  printf("Completed. Read %ld bytes wiith %ld reads, read errors (timeouts + retries) %ld\n", source_size, reads, errors);
 
-    exit(EXIT_SUCCESS);
+  exit(EXIT_SUCCESS);
 }
 

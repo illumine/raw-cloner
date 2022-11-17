@@ -14,7 +14,7 @@ It brakes on first error
 
 
 #define VERSION "v1.0"
-#define VERSION_DATE "15/11/2021"
+#define VERSION_DATE "16/11/2021"
 
 int copy_forward( const char *from,  const char *to ){
   int fdi=-1, fdo=-1;
