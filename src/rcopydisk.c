@@ -1,6 +1,10 @@
  /*
 *****************************
 Simple Reverse Copy using a Static Buffer Size
+Read file position is set to the end of the input file.
+Program copies a buffer from the end to the start of the input file.
+If the buffer cannot be read from inpout file, 
+then BUFSIZ ASCII 0s are written to the output.
 
 *****************************
 */
@@ -14,57 +18,59 @@ Simple Reverse Copy using a Static Buffer Size
 
 #define MAX_READ_RETRIES 3
 
+
+#define VERSION "v1.0"
+#define VERSION_DATE "18/11/2021"
+
+
 int copy_backwards_buffered( const char *from,  const char *to ){
   int fdi=-1, fdo=-1;
   ssize_t source_size, current_pos;
-  int saved_errno; 
   
-    printf("Reverse Copy from %s to  %s using %d bytes buffer.\n", from, to, BUFSIZ);
+    printf("Reads a file/disk input backwards byte by byte.\n \
+	Copy from %s to  %s using %d bytes buffer.\n \
+	If the buffer cannot be read from inpout file, \n  \
+    then BUFSIZ ASCII 0s are written to the output.\n", from, to, BUFSIZ);
 
     fdi = open(from, O_RDONLY);
     if (fdi < 0){
-       saved_errno = errno;    	
-       printf("Error opening %s file to read.\n", from);
-       goto out_error;
+        printf("Error opening %s file to read.\n", from);
+        goto out_error;
     }
 
     fdo = open(to, O_WRONLY | O_CREAT, 0600);
     if (fdo < 0){
-       saved_errno = errno;    	
-       printf("Error opening %s file to write.\n", to);
-       goto out_error;
+        printf("Error opening %s file to write.\n", to);
+        goto out_error;
     }
 
 
-  /* Get the source file/disk size in bytes */
-   source_size = lseek(fdi, 0, SEEK_END);
-   if( source_size < 0){
-      saved_errno = errno;  	
-      printf("Error seeking source to SEEK_END.\n");
-      goto out_error;
-  }else{
-      printf("Source File/Disk size is: %ld bytes.\n", source_size);
-  }
+    /* Get the source file/disk size in bytes */
+    source_size = lseek(fdi, 0, SEEK_END);
+    if( source_size < 0){
+       printf("Error seeking source to SEEK_END.\n");
+       goto out_error;
+    }else{
+       printf("Source File/Disk size is: %ld bytes.\n", source_size);
+    }
 
-  /* Seek SET  source file/disk to the END*/
-  current_pos = lseek(fdi, source_size, SEEK_SET);
-  if( current_pos < 0){
-      saved_errno = errno;  	
+    /* Seek SET  source file/disk to the END*/
+    current_pos = lseek(fdi, source_size, SEEK_SET);
+    if( current_pos < 0){
       printf("Error seting source to %ld.\n", source_size);
       goto out_error;
-  }else{
+    }else{
       printf("Source File/Disk offset is set to: %ld bytes.\n", current_pos);
-  }
+    }
 
-  /* Set Destination file/disk to have same size with source. Place its position to the END*/
-  current_pos = lseek(fdo, source_size, SEEK_END);
-  if( source_size < 0){
-      saved_errno = errno;  	
+    /* Set Destination file/disk to have same size with source. Place its position to the END*/
+    current_pos = lseek(fdo, source_size, SEEK_END);
+    if( source_size < 0){
       printf("Error seeking destination to %ld bytes.\n",source_size);
       goto out_error;
-  }else{
+    }else{
       printf("Destination File/Disk size is: %ld bytes.\n", source_size);
-  }
+    }
 
 
   char buf[BUFSIZ] = {0};
@@ -95,7 +101,6 @@ int copy_backwards_buffered( const char *from,  const char *to ){
      /* Write buffer to out */
      current_pos = lseek(fdo, -buf_size, SEEK_CUR);
      if( write(fdo, buf, buf_size) < 0){
-     	saved_errno = errno;
         printf("\r%08lx -> Could not write %ld bytes to %s.\n", current_pos, buf_size, to);
 	    goto  out_error;
      } 
@@ -128,24 +133,21 @@ int copy_backwards_buffered( const char *from,  const char *to ){
   /* Write the remaining bytes to out */
   current_pos = lseek(fdo, -buf_size, SEEK_CUR);
   if( write(fdo, buf, buf_size) < 0){
-      saved_errno = errno;
       printf("\r%08lx -> Could not write %ld bytes to %s.\n", current_pos, buf_size, to);
       goto  out_error;
   }
+  printf("Completed after %ld reads.\n",reads+1);
 
-
-   if(close(fdo) < 0){
-      saved_errno = errno;
+  if(close(fdo) < 0){
       printf("Could not close %s.\n",to);
       fdo=-1;
       goto out_error;
-   }
-   if( close(fdi) < 0){
-      saved_errno = errno;
+  }
+  if( close(fdi) < 0){
       printf("Could not close %s.\n",from);
       fdi=-1;      
       goto out_error;   	
-   }
+ }
 
   /* Success! */
   return 0;
@@ -157,8 +159,7 @@ int copy_backwards_buffered( const char *from,  const char *to ){
     if (fdo >= 0)
         close(fdo);
 
-    printf("System Error %d reported: %s\n",saved_errno,strerror(saved_errno));
-    return saved_errno;
+    return -1;
 }
 
 int main(int argc, char * argv[]) {
