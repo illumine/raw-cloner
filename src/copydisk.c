@@ -29,12 +29,12 @@ int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t o
   int fdi=-1, fdo=-1;
   int saved_errno = 0;
 
-    printf("Copy from %s from offset %ld to %s using %d bytes buffer with Bisect method. \n  \
-	Program tries to read the buffer from the source for %d.\n \
-	If it fails, then the buffer is cut to the half and try to read from the same offset. \n \
-	Procedure repeats until buffer has size of 1 byte.\n \
-	If byte cannot be read then the filepos is moved after that byte and a new buffer of %d bytes is used. \n", 
-	from, offset, to, BUFSIZ, MAX_READ_RETRIES, BUFSIZ);
+    printf("Copy from %s from offset %ld to %s using %d bytes buffer with Bisect method.\n\
+Program tries to read the buffer from the source for %d times.\n\
+If it fails, then the buffer is cut to the half and try to read from the same offset.\n\
+Procedure repeats until buffer has size of 1 byte.\n\
+If byte cannot be read then the filepos is moved after that byte and a new buffer of %d bytes is used.\n", 
+    from, offset, to, BUFSIZ, MAX_READ_RETRIES, BUFSIZ);
 
     fdi = open(from, O_RDONLY);
     if (fdi < 0){
@@ -43,7 +43,7 @@ int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t o
        goto out_error;
     }
         
-    fdo = open(to, O_WRONLY | O_CREAT);
+    fdo = open(to, O_WRONLY | O_CREAT, 0600);
     if (fdo < 0){
        saved_errno = errno;    	
        printf("Error opening %s file to write.\n", to);
@@ -68,7 +68,7 @@ int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t o
 
 
     ssize_t current_pos = lseek(fdi, offset, SEEK_SET);	
-    if( current_pos > 0 ){
+    if( current_pos >= 0 ){
         printf("Positioning source File/Disk to offset: %ld bytes.\n", offset);
     }else{
         saved_errno = errno;		 	
@@ -87,7 +87,7 @@ int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t o
 
     read_form_disk:
       /* Give some microseconds sleep period so disk/cpu won't overheat */
-	  usleep(5);
+      usleep(2);
 	  		
       for( read_retries =0; read_retries < MAX_READ_RETRIES; read_retries++ ){
          times_read++;     
@@ -104,17 +104,17 @@ int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t o
             if( nwritten < 0 ){ 
                saved_errno = errno;            
                printf("Could not write %ld bytes to %s. Aborting.\n",nwritten, to );
-	           goto out_error;
+	       goto out_error;
             }else	       
-	           printf("\r%08x Read %ld bytes, Written %ld bytes for %ld times.",current_pos, nread, nwritten, times_read);
+	       printf("\r%08lx Read %ld bytes, Written %ld bytes for %ld times.",current_pos, nread, nwritten, times_read);
             break;
        }
      }// retries = MAX_READ_RETRIES
      
      /* Problem on reading: we could not read after MAX_READ_RETRIES: Cut buffer siz in the middle and try again */
      if( read_retries == MAX_READ_RETRIES && buf_siz > ONE_BYTE ){
-        printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(buf_siz/2) );
-	    buf_siz = 1 + buf_siz/2;
+        printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(1+buf_siz/2) );
+        buf_siz = 1 + buf_siz/2;
         goto read_form_disk;
      }
 
@@ -172,7 +172,7 @@ int main(int argc, char * argv[]) {
   int status = EXIT_FAILURE;
   
   printf("%s %s %s\n",argv[0], VERSION, VERSION_DATE );
-  if(argc<3){
+  if(argc<4){
   	printf("You need to specify\n%s input_disk output_disk offset\n",argv[0]);
   	return status;
   }else{
