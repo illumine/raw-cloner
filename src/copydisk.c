@@ -21,8 +21,8 @@ Until buffer becomes 1 byte. If this byte cannot be read, the filepos is moved o
 #define MAX_READ_RETRIES 3
 #define ONE_BYTE 1
 
-#define VERSION "v1.1"
-#define VERSION_DATE "18/11/2021"
+#define VERSION "v1.2"
+#define VERSION_DATE "22/11/2021"
 
 
 int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t offset){
@@ -114,7 +114,7 @@ If byte cannot be read then the filepos is moved after that byte and a new buffe
      /* Problem on reading: we could not read after MAX_READ_RETRIES: Cut buffer siz in the middle and try again */
      if( read_retries == MAX_READ_RETRIES && buf_siz > ONE_BYTE ){
         printf("Read Retries %d completed for a buffer of %ld bytes failed. Making new buffer size %ld bytes and try to read again.\n", read_retries, buf_siz, (ssize_t)(1+buf_siz/2) );
-        buf_siz = 1 + buf_siz/2;
+        buf_siz = buf_siz/2;
         goto read_form_disk;
      }
 
