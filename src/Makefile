@@ -49,5 +49,8 @@ copydisk: copydisk.c
 rcopydisk: rcopydisk.c
 	$(CC) rcopydisk.c -o rcopydisk $(CFLAGS)
 
+fbcopy: fbcopy.c
+	$(CC) fbcopy.c -o fbcopy $(CFLAGS)
+	
 install: all
 	mv raw-cloner /bin/raw-cloner
