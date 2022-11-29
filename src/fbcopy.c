@@ -122,7 +122,7 @@ Program tries to read the buffer from the source for %d times and if it fails, i
      
      /* Problem on reading: we could not read after MAX_READ_RETRIES, move the offset to buffer_size*/
      if( read_retries == retries  ){
-        printf("\n%08ld Read Retries %d completed for a buffer of %ld bytes failed. Moving forward %ld bytes.\n",current_pos, read_retries, buffer_size );
+        printf("\n%08ld Read Retries %d completed for a buffer of %ld bytes failed. Moving forward %ld bytes.\n",current_pos, read_retries, buffer_size, buffer_size );
         current_pos = lseek(fdi, buffer_size, SEEK_CUR);
         if( current_pos < 0 ){
            saved_errno = errno;
