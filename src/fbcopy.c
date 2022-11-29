@@ -27,7 +27,7 @@ int forward_copy_buffer( const char *from,  const char *to, size_t from_offset, 
   int saved_errno = 0;
   char * buffer = NULL;
 
-    printf("Copy from %s from offset %ld to offset %ld to destination %s using %d bytes buffer.\n\
+    printf("Copy from %s from offset %ld to offset %ld to destination %s using %ld bytes buffer.\n\
 Program tries to read the buffer from the source for %d times and if it fails, it moves on to next buffer read.\n", 
     from, from_offset, to_offset, to, buffer_size, retries);
 

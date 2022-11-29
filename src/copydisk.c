@@ -29,11 +29,11 @@ int forward_copy_with_bisect_buffer( const char *from,  const char *to, size_t f
   int saved_errno = 0;
   char * buffer = NULL;
 
-    printf("Copy from %s from offset %ld to offset %ld to destination %s using %d bytes buffer with Bisect method.\n\
+    printf("Copy from %s from offset %ld to offset %ld to destination %s using %ld bytes buffer with Bisect method.\n\
 Program tries to read the buffer from the source for %d times.\n\
 If it fails, then the buffer is cut to the half and try to read from the same offset.\n\
 Procedure repeats until buffer has size of 1 byte.\n\
-If byte cannot be read then the filepos is moved after that byte and a new buffer of %d bytes is used.\n", 
+If byte cannot be read then the filepos is moved after that byte and a new buffer of %ld bytes is used.\n", 
     from, from_offset, to_offset, to, buffer_size, retries, buffer_size);
 
 
@@ -120,7 +120,7 @@ If byte cannot be read then the filepos is moved after that byte and a new buffe
                printf("Could not write %ld bytes to %s. Aborting.\n",nwritten, to );
 	       goto out_error;
             }else	       
-	       printf("\r%08lx Read %ld bytes, Written %ld bytes for %ld times.",current_pos, nread, nwritten, times_read);
+	       printf("\r%08ld Read %ld bytes, Written %ld bytes for %ld times.",current_pos, nread, nwritten, times_read);
             break;
        }
      }// retries = MAX_READ_RETRIES
@@ -134,7 +134,7 @@ If byte cannot be read then the filepos is moved after that byte and a new buffe
 
     /* Problem on reading: we could not read after MAX_READ_RETRIES with a buffer of 1 byte. Move the file position 1 byte forward */
      if( read_retries == retries && buffer_size == ONE_BYTE ){
-        printf("%08lx Read Retries %d completed for a buffer of ONE BYTE failed. Making new buffer size %ld bytes and moving file position ONE BYTE Forward.\n",current_pos, read_retries, sizeof buffer );
+        printf("%08ld Read Retries %d completed for a buffer of ONE BYTE failed. Making new buffer size %ld bytes and moving file position ONE BYTE Forward.\n",current_pos, read_retries, sizeof buffer );
         current_pos = lseek(fdi, ONE_BYTE, SEEK_CUR);      
         printf("File position moved to %ld.\n", current_pos);
         buffer_size = sizeof buffer;
