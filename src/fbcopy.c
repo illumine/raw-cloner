@@ -197,7 +197,7 @@ int main(int argc, char * argv[]) {
 	 printf("You can specify -1 for end of file in to_offset\n");
   	 return status;
   }else{
-  	 return forward_copy_buffer( argv[1], argv[2], atol(argv[3]), atol(argv[4]), atol(argv[5]), atoi(argv[6]), atoi(argv[7]) );
+  	 return forward_copy_buffer( argv[1], argv[2], atol(argv[3]), atol(argv[4]), atol(argv[5]), atoi(argv[6]), atol(argv[7]) );
   }
 
 }
