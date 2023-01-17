@@ -2,8 +2,8 @@
 *****************************
 Simple FIle/Disk Forward Copy of Static Buffer Size
 
-It retries 3 times to read the buffer. If it fails, to read it then makes buffer = buffer/2 the half of initial buffer
-Until buffer becomes 1 byte. If this byte cannot be read, the filepos is moved one byte forward.
+Copy input file/disk from offset  to offset to destination file/disk using  bytes buffer.
+Program tries to read the buffer from the source for  times and if it fails, it moves on to next buffer read after skip_bytes.
 
 *****************************
 */
@@ -18,18 +18,18 @@ Until buffer becomes 1 byte. If this byte cannot be read, the filepos is moved o
 #include <assert.h>
 
 
-#define VERSION "v1.0"
-#define VERSION_DATE "29/11/2022"
+#define VERSION "v1.1"
+#define VERSION_DATE "17/01/2023"
 
 
-int forward_copy_buffer( const char *from,  const char *to, size_t from_offset, ssize_t to_offset, size_t buffer_size, int retries){
+int forward_copy_buffer( const char *from,  const char *to, size_t from_offset, ssize_t to_offset, size_t buffer_size, int retries, size_t skip_bytes){
   int fdi=-1, fdo=-1;
   int saved_errno = 0;
   char * buffer = NULL;
 
     printf("Copy from %s from offset %ld to offset %ld to destination %s using %ld bytes buffer.\n\
-Program tries to read the buffer from the source for %d times and if it fails, it moves on to next buffer read.\n", 
-    from, from_offset, to_offset, to, buffer_size, retries);
+Program tries to read the buffer from the source for %d times and if it fails, it skips %ld bytes and moves on to next buffer read.\n", 
+    from, from_offset, to_offset, to, buffer_size, retries, skip_bytes);
 
 
     /* Initial Buffer Allocation according to user defined params*/
@@ -76,6 +76,7 @@ Program tries to read the buffer from the source for %d times and if it fails, i
     assert(to_offset >= from_offset);
     assert(source_size > from_offset);
     assert(source_size >= to_offset);
+    assert(source_size > skip_bytes );
 
     ssize_t current_pos = lseek(fdi, from_offset, SEEK_SET);	
     if( current_pos >= 0 ){
@@ -123,7 +124,10 @@ Program tries to read the buffer from the source for %d times and if it fails, i
      /* Problem on reading: we could not read after MAX_READ_RETRIES, move the offset to buffer_size*/
      if( read_retries == retries  ){
         printf("\n%08ld Read Retries %d completed for a buffer of %ld bytes failed. Moving forward %ld bytes.\n",current_pos, read_retries, buffer_size, buffer_size );
-        current_pos = lseek(fdi, buffer_size, SEEK_CUR);
+        if( skip_bytes > 0 )
+		   current_pos = lseek(fdi, skip_bytes, SEEK_CUR);
+	    else
+	       current_pos = lseek(fdi, buffer_size, SEEK_CUR);
         if( current_pos < 0 ){
            saved_errno = errno;
            printf("Cannot lseek the input file. lseek returned %ld. Aborting.\n",current_pos);
@@ -188,12 +192,12 @@ int main(int argc, char * argv[]) {
   int status = EXIT_FAILURE;
   
   printf("%s %s %s\n",argv[0], VERSION, VERSION_DATE );
-  if(argc<7){
-   	 printf("You need to specify\n%s input_disk output_disk from_offset to_offset  buffer_size  retries\n",argv[0]);
+  if(argc<8){
+   	 printf("You need to specify\n%s input_disk output_disk from_offset to_offset  buffer_size  retries  skip_bytes\n",argv[0]);
 	 printf("You can specify -1 for end of file in to_offset\n");
   	 return status;
   }else{
-  	 return forward_copy_buffer( argv[1], argv[2], atol(argv[3]), atol(argv[4]), atol(argv[5]), atoi(argv[6]) );
+  	 return forward_copy_buffer( argv[1], argv[2], atol(argv[3]), atol(argv[4]), atol(argv[5]), atoi(argv[6]), atoi(argv[7]) );
   }
 
 }
