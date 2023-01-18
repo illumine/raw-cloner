@@ -1,6 +1,6 @@
 /*
 *****************************
-Simple FIle/Disk Forward Copy of Static Buffer Size
+Simple Fιle/Disk Forward Copy of Static Buffer Size
 
 Copy input file/disk from offset  to offset to destination file/disk using  bytes buffer.
 Program tries to read the buffer from the source for  times and if it fails, it moves on to next buffer read after skip_bytes.
@@ -195,6 +195,7 @@ int main(int argc, char * argv[]) {
   if(argc<8){
    	 printf("You need to specify\n%s input_disk output_disk from_offset to_offset  buffer_size  retries  skip_bytes\n",argv[0]);
 	 printf("You can specify -1 for end of file in to_offset\n");
+	 printf("If skip_bytes = 0 then program moves current offset to +buffer_size. Ifskip_bytes > 0 then program moves current offset to +skip_bytes \n");
   	 return status;
   }else{
   	 return forward_copy_buffer( argv[1], argv[2], atol(argv[3]), atol(argv[4]), atol(argv[5]), atoi(argv[6]), atol(argv[7]) );
