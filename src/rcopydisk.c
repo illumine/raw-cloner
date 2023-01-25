@@ -104,7 +104,7 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
     printf("About to read/write: %ld bytes.\n", to_offset-from_offset);
 
     size_t reads = (size_t)( (to_offset - from_offset) / buffer_size);
-    printf("About to perform: %ld reads.\n", reads);
+    printf("About to perform: %ld reads.\n", reads+1);
     for( size_t i = 0 ; i < reads; i++){
        /* Initialize buffer to null*/
        memset(buffer,0,buffer_size);
