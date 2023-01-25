@@ -62,7 +62,7 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
     source_size = lseek(fdi, 0, SEEK_END);
     if( source_size < 0){
       saved_errno = errno; 
-      printf("Error seeking source to SEEK_END.\n");
+      printf("Error seeking source %s to SEEK_END.\n", to);
       goto out_error;
     }else{
       printf("Source size is: %ld bytes.\n", source_size);
@@ -101,9 +101,10 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
       printf("Destination size is: %ld bytes.\n", to_offset);
     }
 
-
+    printf("About to read/write: %ld bytes.\n", to_offset-from_offset);
 
     size_t reads = (size_t)( (to_offset - from_offset) / buffer_size);
+    printf("About to perform: %ld reads.\n", reads);
     for( size_t i = 0 ; i < reads; i++){
        /* Initialize buffer to null*/
        memset(buffer,0,buffer_size);
@@ -151,8 +152,10 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
 
   /* Read and write the remaining bytes of the file */
   memset(buffer,0,buffer_size);
- 
-  buffer_size = to_offset - reads * buffer_size;
+  if( reads == 0 )
+     buffer_size = to_offset - from_offset;
+  else
+     buffer_size = to_offset - reads * buffer_size;
   
   current_pos = lseek(fdi, -buffer_size, SEEK_CUR);
   if( current_pos < 0){
