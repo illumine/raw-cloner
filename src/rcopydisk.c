@@ -29,9 +29,9 @@ int copy_backwards_buffered( const char *from,  const char *to, size_t from_offs
   ssize_t source_size, current_pos;
   
     printf("Reads a file/disk input backwards: from the ending offset to the starting offset.\n\
-Copy from %s source from ending offset  %ld to starting offset %ld to %s using %d bytes buffer.\n\
+Copy from %s source from ending offset  %ld to starting offset %ld to %s using %ld bytes buffer.\n\
 If the buffer cannot be read from input after %d retries,\n\
-then %d ASCII 0s are written to the output and program tries to read the next buffer to the left.\n", from, to_offset, from_offset, to, buffer_size ,retries,buffer_size);
+then %ld ASCII 0s are written to the output and program tries to read the next buffer to the left.\n", from, to_offset, from_offset, to, buffer_size ,retries,buffer_size);
 
     /* Initial Buffer Allocation according to user defined params*/
     if((buffer = (char * ) calloc(buffer_size, sizeof(char))) == NULL) {
