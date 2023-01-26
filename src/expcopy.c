@@ -36,7 +36,7 @@ int forward_copy_with_exponential_method(
     printf("Copy from %s from offset %ld to offset %ld to destination %s using %ld bytes initial buffer with exponential method:\n",  from, from_offset, to_offset, to, buffer_size_initial);
     printf("It retries %d times to read the buffer of buffer_size.\n",retries);
     printf("If read failed: it skips bytes = exp(%ld,i) and sets j=0, i++. Where i is the i-th continous time it FAILED to read.\n", buffer_size_initial);
-    printf("Else it makes the buffer_size=exp(%ld,j) and sets i=0, j++. Where j is the j-th continous time it SUCCED to read.\n", skip_bytes_initial );
+    printf("Else it makes the buffer_size=exp(%ld,j) and sets i=0, j++. Where j is the j-th continous time it SUCCEED to read.\n", skip_bytes_initial );
     printf("Integer failed-i : [1  %ld],  succeded-j : [1, %ld]\n",  skip_bytes_limit, buffer_size_limit);   
 
     /* Initial Buffer Allocation according to user defined params*/
@@ -159,7 +159,7 @@ int forward_copy_with_exponential_method(
          buffer_size = buffer_size_initial;
 		 
       }else{
-         printf("Read Retries %d completed for a buffer of %ld bytes succeded.\n", read_retries, buffer_size );
+         printf("Read Retries %d completed for a buffer of %ld bytes succeeded.\n", read_retries, buffer_size );
          buffer_size = buffer_size * buffer_size_initial;   
          if(  buffer_size > buffer_size_limit )
             buffer_size = buffer_size_limit;
