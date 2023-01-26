@@ -1,8 +1,8 @@
 /*
 *****************************
-Simple File/Disk Forward Copy of Static Buffer Size
+Simple File/Disk Forward Copy of using a Buffer
 
-It retries 3 times to read the buffer. If it fails, to read it then makes buffer = buffer/2 the half of initial buffer
+It retries  times to read the buffer. If it fails, to read it then makes buffer = buffer/2 the half of initial buffer
 Until buffer becomes 1 byte. If this byte cannot be read, the filepos is moved one byte forward.
 
 *****************************
