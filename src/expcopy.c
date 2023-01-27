@@ -9,7 +9,7 @@ integer i : [2  Imax],  j : [2, Jmax]
 
 *****************************
 */
-
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -8,7 +8,7 @@ then buffer_size ASCII 0s are written to the output.
 
 *****************************
 */
-
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

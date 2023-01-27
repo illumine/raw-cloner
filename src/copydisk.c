@@ -7,7 +7,7 @@ Until buffer becomes 1 byte. If this byte cannot be read, the filepos is moved o
 
 *****************************
 */
-
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

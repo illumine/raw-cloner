@@ -7,7 +7,7 @@ Program tries to read the buffer from the source for  times and if it fails, it 
 
 *****************************
 */
-
+#define _FILE_OFFSET_BITS 64
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -55,5 +55,8 @@ fbcopy: fbcopy.c
 expcopy: expcopy.c
 	$(CC) expcopy.c -o expcopy $(CFLAGS)
 	
+dhcopy: dhcopy.c
+	$(CC) dhcopy.c -o dhcopy $(CFLAGS)	
+
 install: all
 	mv raw-cloner /bin/raw-cloner
