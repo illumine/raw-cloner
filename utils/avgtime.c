@@ -13,7 +13,7 @@ Calculates average disk read time
 #include <unistd.h>
 
 #define VERSION "v1.0"
-#define VERSION_DATE "16/11/2021"
+#define VERSION_DATE "02/01/2023"
 
 /* We define this as a macro since we need to have it inline for making calculation faster from a function*/
 #define MICRO_TDIFF(tstart,tend)  (((1000000 )*(tend.tv_sec) + (tend.tv_usec)) - ((1000000 )*(tstart.tv_sec) + (tstart.tv_usec)))
