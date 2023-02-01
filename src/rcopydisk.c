@@ -18,8 +18,8 @@ then buffer_size ASCII 0s are written to the output.
 #include <assert.h>
 
 
-#define VERSION "v1.2"
-#define VERSION_DATE "25/01/2023"
+#define VERSION "v1.3"
+#define VERSION_DATE "01/02/2023"
 
 
 int copy_backwards_buffered( const char *from,  const char *to, size_t from_offset, ssize_t to_offset, size_t buffer_size, int retries ){
@@ -39,7 +39,7 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
        printf("Error allocating buffer of size %ld. Consider using a smaller buffer size.\n", buffer_size);
        goto out_error;
     }else{
-  	   printf("Allocated buffer of size %ld.\n", buffer_size);
+       printf("Allocated buffer of size %ld.\n", buffer_size);
     }
 
 
@@ -116,7 +116,7 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
           printf("Could not seek source to the right for buffer bytes.\n");
           goto out_error;
        }
-     
+
        char could_read = 'n';
        for( int read_retries =0; read_retries < retries; read_retries++ ){
           if( read(fdi, buffer, buffer_size) < 0){
@@ -125,11 +125,13 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
 	      }else{
 	        could_read = 'y';
             break;
-	      }
+          }
        }
+
        if( could_read == 'n' ){
-         printf("\r%08lx -> Could not read %ld bytes from source %s.\n", current_pos, buffer_size, from);
-       } 
+         printf("\n%08lx -> Could not read %ld bytes from source %s.\n", current_pos, buffer_size, from);
+       }
+
        current_pos = lseek(fdi, -buffer_size, SEEK_CUR);
        if( current_pos < 0){
          saved_errno = errno;       	
@@ -141,7 +143,7 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
        current_pos = lseek(fdo, -buffer_size, SEEK_CUR);
        if( write(fdo, buffer, buffer_size) < 0){
          saved_errno = errno;
-         printf("\r%08lx -> Could not write %ld bytes to %s.\n", current_pos, buffer_size, to);
+         printf("\n%08lx -> Could not write %ld bytes to %s.\n", current_pos, buffer_size, to);
 	     goto  out_error;
        } 
        lseek(fdo, -buffer_size, SEEK_CUR);
@@ -149,18 +151,17 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
        /* Give some microseconds sleep period so disk/cpu won't overheat */
        usleep(2);
   }
-
   /* Read and write the remaining bytes of the file */
   memset(buffer,0,buffer_size);
   if( reads == 0 )
      buffer_size = to_offset - from_offset;
   else
-     buffer_size = to_offset - reads * buffer_size;
-  
+     buffer_size = to_offset - ( reads * buffer_size + from_offset);
+
   current_pos = lseek(fdi, -buffer_size, SEEK_CUR);
   if( current_pos < 0){
     saved_errno = errno;
-    printf("Could not seek source to the right for buffer bytes.\n");
+    printf("End Could not seek source to the right for buffer bytes.\n");
     goto out_error;
   }
   
@@ -178,13 +179,7 @@ then %ld ASCII 0s are written to the output and program tries to read the next b
   if( could_read == 'n' ){
      printf("\r%08lx -> Could not read %ld bytes from source %s.\n", current_pos, buffer_size, from);
   }
-  current_pos = lseek(fdi, -buffer_size, SEEK_CUR);
-  if( current_pos < 0){
-  	saved_errno = errno;
-    printf("Could not re-seek source to the right for buffer bytes.\n");
-    goto out_error;
-  }
-  
+
   /* Write the remaining bytes to out */
   current_pos = lseek(fdo, -buffer_size, SEEK_CUR);
   if( write(fdo, buffer, buffer_size) < 0){
@@ -239,4 +234,5 @@ int main(int argc, char * argv[]) {
   }
 
 }
+
 
