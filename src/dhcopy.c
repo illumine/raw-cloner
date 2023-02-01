@@ -57,7 +57,7 @@ int forward_copy_with_datahole_method(
   char * buffer = NULL;
 
 
-    printf("Copy from %s from offset %ld to offset %ld to destination %s using %ld bytes buffer with DATA/HOLE method:\n",  from, from_offset, to_offset, to, buffer_size_initial);
+    printf("Copy from %s from offset %ld to offset %ld to destination %s using %ld bytes buffer with DATA/HOLE method:\n",  from, from_offset, to_offset, to, buffer_size);
     printf("It moves the file pointer to the next section where DATA are present.\n");   
     printf("It retries %d times to read the data sextion using a buffer of buffer_size.\n",retries);
     printf("It moves the file pointer to the next section where HOLE is present and skips it.\n");
