@@ -13,20 +13,20 @@ Calculates average disk read time
 #include <unistd.h>
 
 #define VERSION "v1.0"
-#define VERSION_DATE "02/01/2023"
+#define VERSION_DATE "01/02/2023"
 
 /* We define this as a macro since we need to have it inline for making calculation faster from a function*/
 #define MICRO_TDIFF(tstart,tend)  (((1000000 )*(tend.tv_sec) + (tend.tv_usec)) - ((1000000 )*(tstart.tv_sec) + (tstart.tv_usec)))
 
 
-int get_average_read_time( const char *from,  size_t segment_size, size_t buffer_size ){
+int get_average_read_time( const char *from,  size_t buffer_size,  size_t segment_size){
   int fdi=-1;
   char * buffer = NULL;
   int saved_errno=0; 
 
   
-    printf("Calculate average read time from %s \n  \
-	    Using segment size %ld bytes and a read buffer of %ld bytes.\n", from,  segment_size, buffer_size);
+    printf("Calculate average read time from %s \n", from);
+    printf("Using read buffer of %ld bytes and skip/segment bytes %ld.\n",   buffer_size, segment_size);
 
     fdi = open(from, O_RDONLY);
     if (fdi < 0){
@@ -73,7 +73,7 @@ int get_average_read_time( const char *from,  size_t segment_size, size_t buffer
     time_t total_time_read = 0;
 
     
-    printf("Sample size - reads is %.0Lf\n",sample_size);	
+    printf("Sample size - reads is %.0ld\n",sample_size);	
     for(size_t i=0; i<sample_size; i++){
        ssize_t nread;
 	   	
@@ -99,7 +99,7 @@ int get_average_read_time( const char *from,  size_t segment_size, size_t buffer
     }
 
     double  avg_read_time =  (double) total_time_read/ (double)sample_size ;
-    printf("Completed. Average read time is %f microseconds for %ld reads\n", avg_read_time, sample_size);
+    printf("Completed. Average per read time is %f microseconds for a sample of %ld reads\n", avg_read_time, sample_size);
 
 
     if (fdi >= 0)
@@ -128,12 +128,13 @@ int main(int argc, char * argv[]) {
   int status = EXIT_FAILURE;
 
   printf("%s %s %s\n",argv[0], VERSION, VERSION_DATE );
-  if(argc<2){
-        printf("You need to specify\n%s input_disk\n",argv[0]);
+  if(argc<3){
+        printf("You need to specify\n%s input_disk read_buffer_bytes skip_bytes\n",argv[0]);
         return status;
   }else{
-        return get_average_read_time( argv[1], 500*BUFSIZ, 10*BUFSIZ);
+        return get_average_read_time( argv[1], atol(argv[2]), atol(argv[3]) );
   }
 
 }
+
 
