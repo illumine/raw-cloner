@@ -1,3 +1,34 @@
+ /*
+ 
+Simple File/Disk Forward Copy of variable Buffer Size
+Copy input file/disk from offset  to offset to destination file/disk using  variable bytes buffer.
+Program tries to read sections of disk that contain DATA rather than reading the entire drive or large sections of HOLES
+It works with linux Kernel version 3.1 and above.
+ 
+See lseek manual:
+Seeking file data and holes
+Since version 3.1, Linux supports the following additional values
+for whence:
+       SEEK_DATA
+              Adjust the file offset to the next location in the file
+              greater than or equal to offset containing data.  If
+              offset points to data, then the file offset is set to
+              offset.
+       SEEK_HOLE
+              Adjust the file offset to the next hole in the file
+              greater than or equal to offset.  If offset points into
+              the middle of a hole, then the file offset is set to
+              offset.  If there is no hole past offset, then the file
+              offset is adjusted to the end of the file (i.e., there is
+              an implicit hole at the end of any file).
+       In both of the above cases, lseek() fails if offset points past
+       the end of the file.
+*****************************
+
+File traversal originally written here:
+https://gist.github.com/xkikeg/4645373
+
+*/
 #define _FILE_OFFSET_BITS 64
 
 #include <stdio.h>
