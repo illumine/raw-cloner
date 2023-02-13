@@ -40,9 +40,11 @@ https://gist.github.com/xkikeg/4645373
 #include <assert.h>
 #include <errno.h>
 #include <time.h>
+#include <string.h>
 
-#define VERSION "v1.1"
-#define VERSION_DATE "10/02/2023"
+
+#define VERSION "v1.2"
+#define VERSION_DATE "13/02/2023"
 
 #ifndef SEEK_DATA
 #warning "SEEK_DATA is undeclared and manually defined."
@@ -160,7 +162,7 @@ int forward_copy_with_datahole_method(
              printf("Could not write %ld bytes to %s. Aborting.\n",nwritten, to );
              goto out_error;
           }else          
-             printf("\r%08ld Read %ld bytes, Written %ld bytes for %ld read_retries.",beg, nread, nwritten, read_retries);   
+             printf("\r%08ld Read %ld bytes, Written %ld bytes for %d read_retries.",beg, nread, nwritten, read_retries);   
              break;
         }
     }//for retries
